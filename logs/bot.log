@@ -1,0 +1,25 @@
+2025-09-17 16:58:32,596 [INFO] Запуск NeuroTrade (NT)
+2025-09-17 16:58:32,596 [INFO] Режим работы: dry-run
+2025-09-17 16:58:32,596 [INFO] Биржа: binance
+2025-09-17 16:58:32,596 [INFO] Список пар: пусто
+2025-09-17 16:58:32,597 [INFO] Бот готов к работе. Модули ещё не подключены.
+2025-09-17 17:02:33,522 [INFO] Запуск NeuroTrade (NT)
+2025-09-17 17:02:33,522 [INFO] Режим работы: dry-run
+2025-09-17 17:02:33,522 [INFO] Биржа: binance
+2025-09-17 17:02:33,522 [INFO] Список пар: пусто
+2025-09-17 17:02:33,522 [INFO] Бот готов к работе. Модули ещё не подключены.
+2025-09-17 17:07:00,417 [INFO] Запуск NeuroTrade (NT)
+2025-09-17 17:07:00,417 [INFO] Режим работы: dry-run
+2025-09-17 17:07:00,417 [INFO] Биржа: binance
+2025-09-17 17:07:00,424 [INFO] Загружаем список пар с binance...
+2025-09-17 17:07:03,742 [INFO] Всего найдено 418 USDT-пар
+2025-09-17 17:09:06,056 [INFO] Отобрано 45 пар после фильтров
+2025-09-17 17:09:06,090 [INFO] Whitelist: ['BTC/USDT', 'ETH/USDT', 'BNB/USDT', 'LTC/USDT', 'ADA/USDT', 'XRP/USDT', 'TRX/USDT', 'USDC/USDT', 'LINK/USDT', 'DOGE/USDT', 'HBAR/USDT', 'SOL/USDT', 'DOT/USDT', 'UNI/USDT', 'AVAX/USDT', 'AAVE/USDT', 'NEAR/USDT', 'FIL/USDT', 'OG/USDT', 'CAKE/USDT', 'PROM/USDT', 'ARB/USDT', 'SUI/USDT', 'WLD/USDT', 'FDUSD/USDT', 'SEI/USDT', 'BONK/USDT', 'ETHFI/USDT', 'ENA/USDT', 'THE/USDT', 'PENGU/USDT', 'TST/USDT', 'MUBARAK/USDT', 'ONDO/USDT', 'PLUME/USDT', 'MITO/USDT', 'WLFI/USDT', 'SOMI/USDT', 'OPEN/USDT', 'LINEA/USDT', 'HOLO/USDT', 'PUMP/USDT', 'AVNT/USDT', 'ZKC/USDT', 'SKY/USDT']
+2025-09-17 17:11:53,678 [INFO] Запуск NeuroTrade (NT)
+2025-09-17 17:11:53,678 [INFO] Режим работы: dry-run
+2025-09-17 17:11:53,678 [INFO] Биржа: binance
+2025-09-17 17:11:53,685 [INFO] Загружаем список пар с binance...
+2025-09-17 17:11:56,809 [INFO] Всего найдено 418 USDT-пар
+2025-09-17 17:13:53,072 [INFO] Отобрано 45 пар после фильтров
+2025-09-17 17:13:53,074 [INFO] Whitelist сохранён в data/whitelist.json
+2025-09-17 17:13:53,108 [INFO] Whitelist: ['BTC/USDT', 'ETH/USDT', 'BNB/USDT', 'LTC/USDT', 'ADA/USDT', 'XRP/USDT', 'TRX/USDT', 'USDC/USDT', 'LINK/USDT', 'DOGE/USDT', 'HBAR/USDT', 'SOL/USDT', 'DOT/USDT', 'UNI/USDT', 'AVAX/USDT', 'AAVE/USDT', 'NEAR/USDT', 'FIL/USDT', 'OG/USDT', 'CAKE/USDT', 'PROM/USDT', 'ARB/USDT', 'SUI/USDT', 'WLD/USDT', 'FDUSD/USDT', 'SEI/USDT', 'BONK/USDT', 'ETHFI/USDT', 'ENA/USDT', 'THE/USDT', 'PENGU/USDT', 'TST/USDT', 'MUBARAK/USDT', 'ONDO/USDT', 'PLUME/USDT', 'MITO/USDT', 'WLFI/USDT', 'SOMI/USDT', 'OPEN/USDT', 'LINEA/USDT', 'HOLO/USDT', 'PUMP/USDT', 'AVNT/USDT', 'ZKC/USDT', 'SKY/USDT']

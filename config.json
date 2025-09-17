@@ -1,0 +1,26 @@
+﻿{
+  "bot_name": "NeuroTrade",
+  "bot_short": "NT",
+  "mode": "dry-run",
+  "exchange": "binance",
+  "symbols": [],
+  "risk": {
+    "max_per_trade_usdt": 25,
+    "max_per_trade_pct": 0.5,
+    "daily_loss_limit_usdt": 15,
+    "max_spread_pct": 0.08,
+    "min_24h_volume_usdt": 20000000
+  },
+  "paper": {
+    "fee_pct": 0.06,
+    "slippage_bps": 3
+  },
+  "data": {
+    "timeframe": "1m",
+    "lookback_bars": 500
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "logs/bot.log"
+  }
+}
