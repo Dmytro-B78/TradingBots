@@ -1,68 +1,18 @@
 ﻿import ccxt
 import logging
-import json
-import os
-import time
-
-def fetch_and_filter_pairs(cfg, use_cache=True, cache_ttl_hours=24):
-    logger = logging.getLogger(__name__)
-    cache_file = 'data/whitelist.json'
-
-    # Проверяем кэш
-    if use_cache and os.path.exists(cache_file):
-        file_age_hours = (time.time() - os.path.getmtime(cache_file)) / 3600
-        if file_age_hours < cache_ttl_hours:
-            logger.info(f"Загружаем whitelist из {cache_file} (возраст {file_age_hours:.1f} ч.)")
-            with open(cache_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        else:
-            logger.info(f"Whitelist устарел ({file_age_hours:.1f} ч.), обновляем...")
-
-    # Загружаем с биржи
-    exchange_class = getattr(ccxt, cfg.exchange)
-    exchange = exchange_class({'enableRateLimit': True})
-
-    logger.info(f"Загружаем список пар с {cfg.exchange}...")
-    markets = exchange.load_markets()
-    usdt_pairs = [s for s in markets if s.endswith('/USDT') and markets[s]['active']]
-
-    logger.info(f"Всего найдено {len(usdt_pairs)} USDT-пар")
-
-    filtered = []
-    for symbol in usdt_pairs:
-        try:
-            ticker = exchange.fetch_ticker(symbol)
-            volume_usdt = ticker.get('quoteVolume', 0)
-            ask = ticker.get('ask')
-            bid = ticker.get('bid')
-            spread_pct = ((ask - bid) / bid) * 100 if bid and ask else 999
-
-            if volume_usdt >= cfg.risk.min_24h_volume_usdt and spread_pct <= cfg.risk.max_spread_pct:
-                filtered.append(symbol)
-        except Exception as e:
-            logger.warning(f"Ошибка при обработке {symbol}: {e}")
-
-    logger.info(f"Отобрано {len(filtered)} пар после фильтров")
-
-    # Сохраняем whitelist
-    os.makedirs('data', exist_ok=True)
-    with open(cache_file, 'w', encoding='utf-8') as f:
-        json.dump(filtered, f, ensure_ascii=False, indent=2)
-
-    logger.info
-с
-
-
-с@"
-import ccxt
-import logging
 import pandas as pd
+import os
+from datetime import datetime
 
 def run_strategy(cfg, pairs):
     logger = logging.getLogger(__name__)
     if not pairs:
         logger.warning("Список пар пуст — стратегия не запущена.")
         return
+
+    # Файл для записи сигналов
+    os.makedirs('data', exist_ok=True)
+    signals_file = 'data/signals.log'
 
     exchange_class = getattr(ccxt, cfg.exchange)
     exchange = exchange_class({'enableRateLimit': True})
@@ -90,6 +40,12 @@ def run_strategy(cfg, pairs):
             else:
                 signal = "HOLD"
 
+            # Лог в консоль
             logger.info(f"{symbol}: {signal}")
+
+            # Запись в файл
+            with open(signals_file, 'a', encoding='utf-8') as f:
+                f.write(f"{datetime.utcnow().isoformat()}Z,{symbol},{signal}\n")
+
         except Exception as e:
             logger.warning(f"Ошибка стратегии для {symbol}: {e}")

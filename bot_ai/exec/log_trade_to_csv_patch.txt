@@ -1,0 +1,31 @@
+﻿    def log_trade_to_csv(self, trade_data: dict):
+        expected_cols = [
+            "Time","Symbol","Side","Price","PositionSize","SL","TP","OrderId",
+            "Profit(%)","Profit(USDT)","Risk(USDT)","Risk(%)"
+        ]
+
+        row = {
+            "Time": trade_data.get("Time", datetime.now(local_tz).strftime("%Y-%m-%d %H:%M:%S")),
+            "Symbol": trade_data.get("Symbol"),
+            "Side": str(trade_data.get("Side")).upper() if trade_data.get("Side") else None,
+            "Price": trade_data.get("Price"),
+            "PositionSize": trade_data.get("PositionSize"),
+            "SL": trade_data.get("SL"),
+            "TP": trade_data.get("TP"),
+            "OrderId": trade_data.get("OrderId"),
+            "Profit(%)": trade_data.get("Profit(%)"),
+            "Profit(USDT)": trade_data.get("Profit(USDT)"),
+            "Risk(USDT)": trade_data.get("Risk(USDT)"),
+            "Risk(%)": trade_data.get("Risk(%)")
+        }
+
+        df = pd.DataFrame([row])
+
+        write_header = True
+        if os.path.exists(self.trades_log_file):
+            with open(self.trades_log_file, "r", encoding="utf-8") as f:
+                first_line = f.readline().strip()
+                if first_line.split(",") == expected_cols:
+                    write_header = False
+
+        df.to_csv(self.trades_log_file, mode="a", header=write_header, index=False)

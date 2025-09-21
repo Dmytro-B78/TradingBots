@@ -1,0 +1,3 @@
+﻿Time,Symbol,Side,Price,PositionSize,SL,TP,OrderId,Profit(%),Profit(USDT),Risk(USDT),Risk(%),Mode,Comment
+2025-09-18 18:22:47,BTC/USDT,BUY,110.0,10.0,,,,,,,,dry-run,Сигнал по EMA crossover
+2025-09-18 18:22:47,BTC/USDT,SELL,115.0,10.0,,,,4.545454545454546,0.4545454545454546,,,dry-run,Выход по сигналу RSI

@@ -4,19 +4,38 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a57f94eb-65f3-4a0b-8c31-c4c1527daabc" name="Changes" comment="" />
+    <list default="true" id="e9f8f7e2-f828-4181-a3a8-bb311f72c992" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CHAT_STYLE.md" beforeDir="false" afterPath="$PROJECT_DIR$/CHAT_STYLE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PROJECT_INFO.md" beforeDir="false" afterPath="$PROJECT_DIR$/PROJECT_INFO.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/core/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/exec/executor.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/exec/executor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/selector/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/selector/pipeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/simple_ma.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/strategy/simple_ma.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/bot.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/bot.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 6
-}]]></component>
-  <component name="ProjectId" id="32pZBjYyYPScTp6RMduyZfc1Y0w" />
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="32pZTXnpGBPJ6WFixSPPxeNYVjk" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="1" id="Add" />
   </component>
@@ -24,15 +43,15 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/TradingBots/NT&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -42,23 +61,12 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="a57f94eb-65f3-4a0b-8c31-c4c1527daabc" name="Changes" comment="" />
-      <created>1758119341160</created>
+      <changelist id="e9f8f7e2-f828-4181-a3a8-bb311f72c992" name="Changes" comment="" />
+      <created>1758119482566</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1758119341160</updated>
+      <updated>1758119482566</updated>
     </task>
     <servers />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>8</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
