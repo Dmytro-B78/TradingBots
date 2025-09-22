@@ -5,17 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e9f8f7e2-f828-4181-a3a8-bb311f72c992" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CHAT_STYLE.md" beforeDir="false" afterPath="$PROJECT_DIR$/CHAT_STYLE.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PROJECT_INFO.md" beforeDir="false" afterPath="$PROJECT_DIR$/PROJECT_INFO.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/core/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/exec/executor.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/exec/executor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/selector/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/selector/pipeline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/simple_ma.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/strategy/simple_ma.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/bot.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/bot.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project_snapshot.txt" beforeDir="false" afterPath="$PROJECT_DIR$/project_snapshot.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,15 +35,16 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/TradingBots/NT&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/TradingBots/NT"
   }
-}</component>
+}]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
