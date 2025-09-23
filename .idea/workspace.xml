@@ -6,8 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="e9f8f7e2-f828-4181-a3a8-bb311f72c992" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PROJECT_INFO.md" beforeDir="false" afterPath="$PROJECT_DIR$/PROJECT_INFO.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project_snapshot.txt" beforeDir="false" afterPath="$PROJECT_DIR$/project_snapshot.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/config_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/core/config_loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/guard.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/risk/guard.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/smoke.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/smoke.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/risk_log.csv" beforeDir="false" afterPath="$PROJECT_DIR$/risk_log.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_smoke.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_smoke.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,16 +38,16 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/TradingBots/NT"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/TradingBots/NT&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

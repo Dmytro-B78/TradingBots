@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 import time
 import csv
 from datetime import datetime
@@ -14,7 +14,7 @@ class RiskGuard:
         self.cfg = cfg
         self.logger = logger or logging.getLogger(__name__)
         self.notifier = notifier
-        self.risk_cfg = cfg.get("risk", {})
+        self.risk_cfg = cfg.get("risk", default={})
         self.last_trade_time = 0
         self.open_positions = 0
         self.total_loss_pct = 0
@@ -25,69 +25,69 @@ class RiskGuard:
         self.risk_pass_log_file = Path(risk_pass_log_file)
 
     def check(self, ctx):
-        """Проверка сделки на соответствие риск-менеджменту."""
+        """Check trade against risk management rules."""
 
         # 1. Kill-switch
         if self.kill_switch_triggered:
-            return self._deny("Kill-switch активирован — сделки запрещены")
+            return self._deny("Kill-switch is active - trades are blocked")
 
-        # 2. Минимальный 24h объём
+        # 2. Minimum 24h volume
         min_vol = self.risk_cfg.get("min_24h_volume_usdt", 0)
         if ctx.vol24h_usdt < min_vol:
-            return self._deny(f"Объём {ctx.vol24h_usdt} < {min_vol}")
+            return self._deny(f"Volume {ctx.vol24h_usdt} < {min_vol}")
 
-        # 3. Максимальный спред
+        # 3. Maximum spread
         max_spread = self.risk_cfg.get("max_spread_pct", 100)
         if ctx.spread_pct > max_spread:
-            return self._deny(f"Спред {ctx.spread_pct}% > {max_spread}%")
+            return self._deny(f"Spread {ctx.spread_pct}% > {max_spread}%")
 
-        # 4. Максимальный дневной убыток
+        # 4. Maximum daily loss
         max_daily_loss_pct = self.risk_cfg.get("max_daily_loss_pct", 100)
         if ctx.daily_pnl_usdt < 0:
             loss_pct = abs(ctx.daily_pnl_usdt) / ctx.equity_usdt * 100
             if loss_pct > max_daily_loss_pct:
-                return self._deny(f"Дневной убыток {loss_pct:.2f}% > {max_daily_loss_pct}%")
+                return self._deny(f"Daily loss {loss_pct:.2f}% > {max_daily_loss_pct}%")
 
-        # 5. Kill-switch по общему убытку
+        # 5. Kill-switch by total loss
         kill_switch_loss_pct = self.risk_cfg.get("kill_switch_loss_pct", 100)
         if self.total_loss_pct > kill_switch_loss_pct:
             self.kill_switch_triggered = True
-            return self._deny(f"Общий убыток {self.total_loss_pct:.2f}% > {kill_switch_loss_pct}%")
+            return self._deny(f"Total loss {self.total_loss_pct:.2f}% > {kill_switch_loss_pct}%")
 
-        # 6. Лимит по количеству позиций
+        # 6. Max open positions
         max_positions = self.risk_cfg.get("max_positions", 999)
         if self.open_positions >= max_positions:
-            return self._deny(f"Открытых позиций {self.open_positions} >= {max_positions}")
+            return self._deny(f"Open positions {self.open_positions} >= {max_positions}")
 
-        # 7. Риск на сделку (логируем)
+        # 7. Risk per trade (log only)
         risk_per_trade_pct = self.risk_cfg.get("risk_per_trade_pct", 100)
-        self._log(f"Риск на сделку {risk_per_trade_pct}%")
+        self._log(f"Risk per trade {risk_per_trade_pct}%")
 
-        # 8. Максимальный размер позиции
+        # 8. Max position size
         max_position_size_pct = self.risk_cfg.get("max_position_size_pct", 100)
         if (ctx.price / ctx.equity_usdt * 100) > max_position_size_pct:
-            return self._deny(f"Размер позиции > {max_position_size_pct}% от equity")
+            return self._deny(f"Position size > {max_position_size_pct}% of equity")
 
-        # 9. Кулдаун между сделками
+        # 9. Cooldown between trades
         cooldown_minutes = self.risk_cfg.get("cooldown_minutes", 0)
         if cooldown_minutes > 0:
             elapsed = (time.time() - self.last_trade_time) / 60
             if elapsed < cooldown_minutes:
-                return self._deny(f"Кулдаун {cooldown_minutes} мин, прошло {elapsed:.1f} мин")
+                return self._deny(f"Cooldown {cooldown_minutes} min, only {elapsed:.1f} min passed")
 
-        # Если все проверки пройдены
-        self._log("Сделка разрешена ✅")
+        # If all checks passed
+        self._log("Trade allowed")
         self.last_trade_time = time.time()
-        self._log_pass("Сделка разрешена ✅")
+        self._log_pass("Trade allowed")
         return True
 
     def _deny(self, reason):
         if self.logger:
-            self.logger.warning(f"[RiskGuard] ОТКАЗ: {reason}")
+            self.logger.warning(f"[RiskGuard] DENY: {reason}")
         if self.notifier:
-            self.notifier.alert(f"❌ {reason}")
+            self.notifier.alert(f"X {reason}")
 
-        # Логируем отказ в CSV
+        # Log deny to CSV
         self._log_to_csv(self.risk_log_file, reason)
         return False
 
@@ -95,7 +95,7 @@ class RiskGuard:
         if self.logger:
             self.logger.info(f"[RiskGuard] {msg}")
         if self.notifier:
-            self.notifier.alert(f"ℹ️ {msg}")
+            self.notifier.alert(f"INFO {msg}")
 
     def _log_pass(self, msg):
         self._log_to_csv(self.risk_pass_log_file, msg)
