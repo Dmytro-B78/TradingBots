@@ -41,9 +41,9 @@ $env:PYTEST_ADDOPTS = "--basetemp=./.pytest_temp"
 # Шаг 5 — Добавляем корень проекта в PYTHONPATH
 $env:PYTHONPATH = "$PWD"
 
-# Шаг 6 — Запуск тестов с подробным выводом
+# Шаг 6 — Запуск тестов из папки tests с подробным выводом
 Write-Host "=== DEBUG: запускаю pytest с подробным выводом ===" -ForegroundColor Magenta
-$pytestCmd = "python -m pytest -vv --maxfail=1 --disable-warnings --cov=. --cov-report=html --cov-report=json:coverage_reports/coverage.json"
+$pytestCmd = "python -m pytest tests -vv --maxfail=1 --disable-warnings --cov=. --cov-report=html --cov-report=json:coverage_reports/coverage.json"
 Write-Host "Команда: $pytestCmd" -ForegroundColor Magenta
 $pytestResult = Invoke-Expression $pytestCmd
 Write-Host "=== DEBUG: pytest завершил работу ===" -ForegroundColor Magenta
