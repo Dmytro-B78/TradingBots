@@ -22,12 +22,12 @@ if (Test-Path ".venv/Scripts/Activate.ps1") {
     . .\.venv\Scripts\Activate.ps1
 }
 
-# Шаг 2 — Проверка и установка pytest-cov
+# Шаг 2 — Проверка и установка pytest-cov в текущем окружении
 Write-Host "Проверяю наличие pytest-cov..." -ForegroundColor Cyan
-pip show pytest-cov | Out-Null
+python -m pip show pytest-cov | Out-Null
 if ($LASTEXITCODE -ne 0) {
     Write-Host "pytest-cov не найден — устанавливаю..." -ForegroundColor Yellow
-    pip install pytest-cov
+    python -m pip install pytest-cov
 }
 
 # Шаг 3 — Создаём папку для отчётов покрытия
@@ -38,12 +38,15 @@ if (-Not (Test-Path coverage_reports)) {
 # Шаг 4 — Задаём свой temp-каталог для pytest, чтобы избежать PermissionError
 $env:PYTEST_ADDOPTS = "--basetemp=./.pytest_temp"
 
-# Шаг 5 — Запуск тестов с покрытием
+# Шаг 5 — Добавляем корень проекта в PYTHONPATH
+$env:PYTHONPATH = "$PWD"
+
+# Шаг 6 — Запуск тестов с покрытием по всему проекту
 Write-Host "Запускаю pytest..." -ForegroundColor Cyan
-$pytestCmd = "python -m pytest --maxfail=1 --disable-warnings --cov=bot_ai --cov-report=html --cov-report=json:coverage_reports/coverage.json"
+$pytestCmd = "python -m pytest --maxfail=1 --disable-warnings --cov=. --cov-report=html --cov-report=json:coverage_reports/coverage.json"
 $pytestResult = Invoke-Expression $pytestCmd
 
-# Шаг 6 — Проверка покрытия
+# Шаг 7 — Проверка покрытия
 if (Test-Path "coverage_reports/coverage.json") {
     $json = Get-Content coverage_reports/coverage.json | ConvertFrom-Json
     $percent = [math]::Round($json.totals.percent_covered, 2)
@@ -60,9 +63,10 @@ if (Test-Path "coverage_reports/coverage.json") {
 } else {
     Write-Host "⚠ coverage.json не найден — пропускаю проверку" -ForegroundColor Yellow
     $status = "UNKNOWN"
+    if ($Target -eq "ci") { exit 1 }
 }
 
-# Шаг 7 — Логирование результата
+# Шаг 8 — Логирование результата
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $logEntry = "$timestamp — Target=$Target — CoverageMin=$CoverageMin — Status=$status`n$pytestResult`n"
 Add-Content -Path changes.log -Value $logEntry -Encoding UTF8
