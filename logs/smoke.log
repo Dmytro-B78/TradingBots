@@ -1,27 +1,39 @@
-2025-09-21 19:27:59,439 | INFO | smoke | [RiskGuard] Риск на сделку 1%
-2025-09-21 19:27:59,439 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
-2025-09-21 19:27:59,440 | INFO | smoke | [RiskGuard] Риск на сделку 1%
-2025-09-21 19:27:59,440 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
-2025-09-21 19:27:59,745 | INFO | smoke | [RiskGuard] Риск на сделку 1%
-2025-09-21 19:27:59,745 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
-2025-09-21 19:27:59,745 | INFO | smoke | [RiskGuard] Риск на сделку 1%
-2025-09-21 19:27:59,745 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
-2025-09-21 19:39:59,922 | INFO | smoke | [RiskGuard] Риск на сделку 1%
-2025-09-21 19:39:59,922 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
-2025-09-21 19:39:59,922 | INFO | smoke | [RiskGuard] Риск на сделку 1%
-2025-09-21 19:39:59,922 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
-2025-09-21 19:40:00,236 | INFO | smoke | [RiskGuard] Риск на сделку 1%
-2025-09-21 19:40:00,236 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
-2025-09-21 19:40:00,236 | INFO | smoke | [RiskGuard] Риск на сделку 1%
-2025-09-21 19:40:00,236 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
-2025-09-21 20:02:35,031 | INFO | smoke | [RiskGuard] Риск на сделку 1%
-2025-09-21 20:02:35,031 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
-2025-09-21 20:02:35,032 | INFO | smoke | [RiskGuard] Риск на сделку 1%
-2025-09-21 20:02:35,032 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
-2025-09-21 20:02:35,352 | INFO | smoke | [RiskGuard] Риск на сделку 1%
-2025-09-21 20:02:35,352 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
-2025-09-21 20:02:35,352 | INFO | smoke | [RiskGuard] Риск на сделку 1%
-2025-09-21 20:02:35,352 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
-2025-09-23 14:16:52,883 | INFO | smoke | [RiskGuard] Risk per trade 1%
-2025-09-23 14:16:52,883 | WARNING | smoke | [RiskGuard] DENY: Position size > 20% of equity
-2025-09-23 14:16:52,884 | INFO | smoke | [SMOKE] RiskGuard.check returned: False
+2025-10-01 23:40:21,357 | INFO | smoke | [RiskGuard] Риск на сделку 1%
+2025-10-01 23:40:21,358 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
+2025-10-01 23:40:21,358 | INFO | smoke | [SMOKE] RiskGuard.check returned: False
+2025-10-01 23:47:17,571 | INFO | smoke | [RiskGuard] Риск на сделку 1%
+2025-10-01 23:47:17,572 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
+2025-10-01 23:47:17,572 | INFO | smoke | [SMOKE] RiskGuard.check returned: False
+2025-10-01 23:49:00,228 | INFO | smoke | [RiskGuard] Риск на сделку 1%
+2025-10-01 23:49:00,228 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
+2025-10-01 23:49:00,229 | INFO | smoke | [SMOKE] RiskGuard.check returned: False
+2025-10-01 23:58:09,050 | INFO | smoke | [RiskGuard] Риск на сделку 1%
+2025-10-01 23:58:09,051 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
+2025-10-01 23:58:09,051 | INFO | smoke | [SMOKE] RiskGuard.check returned: False
+2025-10-01 23:58:09,827 | INFO | smoke | [RiskGuard] Риск на сделку 1%
+2025-10-01 23:58:09,828 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
+2025-10-01 23:58:09,828 | INFO | smoke | [SMOKE] RiskGuard.check returned: False
+2025-10-01 23:58:51,989 | INFO | smoke | [RiskGuard] Риск на сделку 1%
+2025-10-01 23:58:51,989 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
+2025-10-01 23:58:51,989 | INFO | smoke | [SMOKE] RiskGuard.check returned: False
+2025-10-01 23:58:52,782 | INFO | smoke | [RiskGuard] Риск на сделку 1%
+2025-10-01 23:58:52,782 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
+2025-10-01 23:58:52,783 | INFO | smoke | [SMOKE] RiskGuard.check returned: False
+2025-10-01 23:59:12,030 | INFO | smoke | [RiskGuard] Риск на сделку 1%
+2025-10-01 23:59:12,030 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
+2025-10-01 23:59:12,031 | INFO | smoke | [SMOKE] RiskGuard.check returned: False
+2025-10-01 23:59:12,780 | INFO | smoke | [RiskGuard] Риск на сделку 1%
+2025-10-01 23:59:12,780 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
+2025-10-01 23:59:12,781 | INFO | smoke | [SMOKE] RiskGuard.check returned: False
+2025-10-02 00:00:12,665 | INFO | smoke | [RiskGuard] Риск на сделку 1%
+2025-10-02 00:00:12,666 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
+2025-10-02 00:00:12,666 | INFO | smoke | [SMOKE] RiskGuard.check returned: False
+2025-10-02 00:00:13,426 | INFO | smoke | [RiskGuard] Риск на сделку 1%
+2025-10-02 00:00:13,426 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
+2025-10-02 00:00:13,427 | INFO | smoke | [SMOKE] RiskGuard.check returned: False
+2025-10-02 00:23:24,187 | INFO | smoke | [RiskGuard] Риск на сделку 1%
+2025-10-02 00:23:24,187 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
+2025-10-02 00:23:24,188 | INFO | smoke | [SMOKE] RiskGuard.check returned: False
+2025-10-02 00:23:24,985 | INFO | smoke | [RiskGuard] Риск на сделку 1%
+2025-10-02 00:23:24,985 | WARNING | smoke | [RiskGuard] ОТКАЗ: Размер позиции > 20% от equity
+2025-10-02 00:23:24,986 | INFO | smoke | [SMOKE] RiskGuard.check returned: False

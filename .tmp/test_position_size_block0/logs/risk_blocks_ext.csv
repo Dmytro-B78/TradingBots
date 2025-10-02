@@ -1,0 +1,2 @@
+timestamp,symbol,side,price,equity_usdt,daily_pnl_usdt,spread_pct,vol24h_usdt,reason
+2025-10-01T18:35:22.063609+00:00,ADAUSDT,buy,2000,1000,0,0,5000,unknown

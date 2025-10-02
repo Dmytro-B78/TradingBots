@@ -1,0 +1,7 @@
+Rank,profit_pct,max_drawdown,win_rate,avg_profit_per_trade,buy_count,sell_count,avg_trade_duration_h,Strategy,Pair
+1,84.93,68.44,51.06,0.9,48,46,8.2,SMA,ETH/USDT
+2,71.54,70.8,56.67,1.19,29,31,13.59,RSI,ETH/USDT
+3,20.3,43.57,50.0,0.21,50,48,8.86,SMA,BTC/USDT
+4,18.28,45.03,55.36,0.33,27,29,14.58,RSI,BTC/USDT
+5,4.41,46.01,56.04,0.05,47,44,-13.66,SMA,BNB/USDT
+6,-10.66,46.15,60.47,-0.25,20,23,-71.19,RSI,BNB/USDT

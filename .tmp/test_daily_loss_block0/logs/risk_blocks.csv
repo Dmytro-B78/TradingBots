@@ -1,0 +1,2 @@
+timestamp,symbol,reason,details,mode,current_loss,limit
+2025-10-01T20:35:22.010303+02:00,ETHUSDT,daily_loss,20.00% > 10%,unknown,20.0,10

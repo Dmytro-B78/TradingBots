@@ -2,11 +2,21 @@
 # NeuroTrade Unified Test Runner
 # =========================
 # Запуск тестов с проверкой покрытия кода и обработкой пустого ключа в coverage.json
+# Порог покрытия можно задать через переменную окружения COVERAGE_MIN
 
 param(
     [string]$Target = "local",   # Режим запуска: local или ci
-    [int]$CoverageMin = 85       # Минимальный процент покрытия
+    [int]$CoverageMin = $null    # Минимальный процент покрытия (если null — берём из env или 85)
 )
+
+# Если порог не передан параметром — берём из переменной окружения или 85
+if (-not $CoverageMin) {
+    if ($env:COVERAGE_MIN) {
+        $CoverageMin = [int]$env:COVERAGE_MIN
+    } else {
+        $CoverageMin = 85
+    }
+}
 
 Write-Host "=== NeuroTrade Test Runner ==="
 Write-Host "Режим: $Target"

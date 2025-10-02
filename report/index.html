@@ -1,0 +1,92 @@
+﻿<!DOCTYPE html><html><head><meta charset='UTF-8'><title>FFF Matrix Log</title>
+<style>body{font-family:monospace;background:#111;color:#eee;}.case{color:#0ff;}.fff{color:#ff0;}.linenum{color:#555;}a{color:#0ff;}</style>
+</head><body><h1>FFF Matrix Full Log</h1><pre>
+<span class='linenum'>0001:</span> ============================= test session starts =============================
+<span class='linenum'>0002:</span> platform win32 -- Python 3.13.1, pytest-8.4.2, pluggy-1.6.0
+<span class='linenum'>0003:</span> rootdir: C:\TradingBots\NT
+<span class='linenum'>0004:</span> configfile: pytest.ini
+<span class='linenum'>0005:</span> plugins: cov-7.0.0
+<span class='linenum'>0006:</span> collected 11 items
+<span class='linenum'>0007:</span> 
+<span class='linenum'>0008:</span> <span class='case' id='line8'>tests/test_fetch_and_filter_pairs.py::test_fetch_and_filter_pairs_matrix[skip_args0-False-\u0421\u0442\u0440\u043e\u0433\u0430\u044f \u043b\u043e\u0433\u0438\u043a\u0430, \u0441\u043f\u0440\u0435\u0434 &gt; \u043b\u0438\u043c\u0438\u0442\u0430] [CASE] Строгая логика, спред &gt; лимита | expected_pass=False | skip_args={}</span>
+<span class='linenum'>0009:</span> 
+<span class='linenum'>0010:</span> -------------------------------- live log call --------------------------------
+<span class='linenum'>0011:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:83 [FFF] старт фильтрации</span>
+<span class='linenum'>0012:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:125 [FFF] отсеян по спреду 9.09%</span>
+<span class='linenum'>0013:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:154 [FFF] не прошла фильтры</span>
+<span class='linenum'>0014:</span> PASSED
+<span class='linenum'>0015:</span> <span class='case' id='line15'>tests/test_fetch_and_filter_pairs.py::test_fetch_and_filter_pairs_matrix[skip_args1-True-\u041f\u0440\u043e\u043f\u0443\u0441\u043a \u0441\u043f\u0440\u0435\u0434\u0430] [CASE] Пропуск спреда | expected_pass=True | skip_args={&#39;skip_spread_for&#39;: [&#39;FFF/USDT&#39;]}</span>
+<span class='linenum'>0016:</span> 
+<span class='linenum'>0017:</span> -------------------------------- live log call --------------------------------
+<span class='linenum'>0018:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:83 [FFF] старт фильтрации</span>
+<span class='linenum'>0019:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:34 [FFF] 1d SMA_fast=2.0 SMA_slow=1.75</span>
+<span class='linenum'>0020:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:34 [FFF] 1h SMA_fast=2.0 SMA_slow=1.75</span>
+<span class='linenum'>0021:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:152 [FFF] прошла все фильтры</span>
+<span class='linenum'>0022:</span> PASSED
+<span class='linenum'>0023:</span> <span class='case' id='line23'>tests/test_fetch_and_filter_pairs.py::test_fetch_and_filter_pairs_matrix[skip_args2-False-\u041f\u0440\u043e\u043f\u0443\u0441\u043a RiskGuard, \u043d\u043e \u0441\u043f\u0440\u0435\u0434 \u0440\u0435\u0436\u0435\u0442] [CASE] Пропуск RiskGuard, но спред режет | expected_pass=False | skip_args={&#39;skip_riskguard_for&#39;: [&#39;FFF/USDT&#39;]}</span>
+<span class='linenum'>0024:</span> 
+<span class='linenum'>0025:</span> -------------------------------- live log call --------------------------------
+<span class='linenum'>0026:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:83 [FFF] старт фильтрации</span>
+<span class='linenum'>0027:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:125 [FFF] отсеян по спреду 9.09%</span>
+<span class='linenum'>0028:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:154 [FFF] не прошла фильтры</span>
+<span class='linenum'>0029:</span> PASSED
+<span class='linenum'>0030:</span> <span class='case' id='line30'>tests/test_fetch_and_filter_pairs.py::test_fetch_and_filter_pairs_matrix[skip_args3-False-\u041f\u0440\u043e\u043f\u0443\u0441\u043a \u043e\u0431\u044a\u0451\u043c\u0430, \u043d\u043e \u0441\u043f\u0440\u0435\u0434 \u0440\u0435\u0436\u0435\u0442] [CASE] Пропуск объёма, но спред режет | expected_pass=False | skip_args={&#39;skip_volume_for&#39;: [&#39;FFF/USDT&#39;]}</span>
+<span class='linenum'>0031:</span> 
+<span class='linenum'>0032:</span> -------------------------------- live log call --------------------------------
+<span class='linenum'>0033:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:83 [FFF] старт фильтрации</span>
+<span class='linenum'>0034:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:125 [FFF] отсеян по спреду 9.09%</span>
+<span class='linenum'>0035:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:154 [FFF] не прошла фильтры</span>
+<span class='linenum'>0036:</span> PASSED
+<span class='linenum'>0037:</span> <span class='case' id='line37'>tests/test_fetch_and_filter_pairs.py::test_fetch_and_filter_pairs_matrix[skip_args4-False-\u041f\u0440\u043e\u043f\u0443\u0441\u043a \u0442\u0440\u0435\u043d\u0434\u0430 D1, \u043d\u043e \u0441\u043f\u0440\u0435\u0434 \u0440\u0435\u0436\u0435\u0442] [CASE] Пропуск тренда D1, но спред режет | expected_pass=False | skip_args={&#39;skip_trend_d1_for&#39;: [&#39;FFF/USDT&#39;]}</span>
+<span class='linenum'>0038:</span> 
+<span class='linenum'>0039:</span> -------------------------------- live log call --------------------------------
+<span class='linenum'>0040:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:83 [FFF] старт фильтрации</span>
+<span class='linenum'>0041:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:125 [FFF] отсеян по спреду 9.09%</span>
+<span class='linenum'>0042:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:154 [FFF] не прошла фильтры</span>
+<span class='linenum'>0043:</span> PASSED
+<span class='linenum'>0044:</span> <span class='case' id='line44'>tests/test_fetch_and_filter_pairs.py::test_fetch_and_filter_pairs_matrix[skip_args5-False-\u041f\u0440\u043e\u043f\u0443\u0441\u043a \u0442\u0440\u0435\u043d\u0434\u0430 LTF, \u043d\u043e \u0441\u043f\u0440\u0435\u0434 \u0440\u0435\u0436\u0435\u0442] [CASE] Пропуск тренда LTF, но спред режет | expected_pass=False | skip_args={&#39;skip_trend_ltf_for&#39;: [&#39;FFF/USDT&#39;]}</span>
+<span class='linenum'>0045:</span> 
+<span class='linenum'>0046:</span> -------------------------------- live log call --------------------------------
+<span class='linenum'>0047:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:83 [FFF] старт фильтрации</span>
+<span class='linenum'>0048:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:125 [FFF] отсеян по спреду 9.09%</span>
+<span class='linenum'>0049:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:154 [FFF] не прошла фильтры</span>
+<span class='linenum'>0050:</span> PASSED
+<span class='linenum'>0051:</span> <span class='case' id='line51'>tests/test_fetch_and_filter_pairs.py::test_fetch_and_filter_pairs_matrix[skip_args6-True-\u041f\u0440\u043e\u043f\u0443\u0441\u043a RiskGuard \u0438 \u0441\u043f\u0440\u0435\u0434\u0430] [CASE] Пропуск RiskGuard и спреда | expected_pass=True | skip_args={&#39;skip_riskguard_for&#39;: [&#39;FFF/USDT&#39;], &#39;skip_spread_for&#39;: [&#39;FFF/USDT&#39;]}</span>
+<span class='linenum'>0052:</span> 
+<span class='linenum'>0053:</span> -------------------------------- live log call --------------------------------
+<span class='linenum'>0054:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:83 [FFF] старт фильтрации</span>
+<span class='linenum'>0055:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:34 [FFF] 1d SMA_fast=2.0 SMA_slow=1.75</span>
+<span class='linenum'>0056:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:34 [FFF] 1h SMA_fast=2.0 SMA_slow=1.75</span>
+<span class='linenum'>0057:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:152 [FFF] прошла все фильтры</span>
+<span class='linenum'>0058:</span> PASSED
+<span class='linenum'>0059:</span> <span class='case' id='line59'>tests/test_fetch_and_filter_pairs.py::test_fetch_and_filter_pairs_matrix[skip_args7-True-\u041f\u0440\u043e\u043f\u0443\u0441\u043a \u043e\u0431\u044a\u0451\u043c\u0430 \u0438 \u0441\u043f\u0440\u0435\u0434\u0430] [CASE] Пропуск объёма и спреда | expected_pass=True | skip_args={&#39;skip_volume_for&#39;: [&#39;FFF/USDT&#39;], &#39;skip_spread_for&#39;: [&#39;FFF/USDT&#39;]}</span>
+<span class='linenum'>0060:</span> 
+<span class='linenum'>0061:</span> -------------------------------- live log call --------------------------------
+<span class='linenum'>0062:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:83 [FFF] старт фильтрации</span>
+<span class='linenum'>0063:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:34 [FFF] 1d SMA_fast=2.0 SMA_slow=1.75</span>
+<span class='linenum'>0064:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:34 [FFF] 1h SMA_fast=2.0 SMA_slow=1.75</span>
+<span class='linenum'>0065:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:152 [FFF] прошла все фильтры</span>
+<span class='linenum'>0066:</span> PASSED
+<span class='linenum'>0067:</span> <span class='case' id='line67'>tests/test_fetch_and_filter_pairs.py::test_fetch_and_filter_pairs_matrix[skip_args8-True-\u041f\u0440\u043e\u043f\u0443\u0441\u043a \u0442\u0440\u0435\u043d\u0434\u0430 D1 \u0438 \u0441\u043f\u0440\u0435\u0434\u0430] [CASE] Пропуск тренда D1 и спреда | expected_pass=True | skip_args={&#39;skip_trend_d1_for&#39;: [&#39;FFF/USDT&#39;], &#39;skip_spread_for&#39;: [&#39;FFF/USDT&#39;]}</span>
+<span class='linenum'>0068:</span> 
+<span class='linenum'>0069:</span> -------------------------------- live log call --------------------------------
+<span class='linenum'>0070:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:83 [FFF] старт фильтрации</span>
+<span class='linenum'>0071:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:34 [FFF] 1h SMA_fast=2.0 SMA_slow=1.75</span>
+<span class='linenum'>0072:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:152 [FFF] прошла все фильтры</span>
+<span class='linenum'>0073:</span> PASSED
+<span class='linenum'>0074:</span> <span class='case' id='line74'>tests/test_fetch_and_filter_pairs.py::test_fetch_and_filter_pairs_matrix[skip_args9-True-\u041f\u0440\u043e\u043f\u0443\u0441\u043a \u0442\u0440\u0435\u043d\u0434\u0430 LTF \u0438 \u0441\u043f\u0440\u0435\u0434\u0430] [CASE] Пропуск тренда LTF и спреда | expected_pass=True | skip_args={&#39;skip_trend_ltf_for&#39;: [&#39;FFF/USDT&#39;], &#39;skip_spread_for&#39;: [&#39;FFF/USDT&#39;]}</span>
+<span class='linenum'>0075:</span> 
+<span class='linenum'>0076:</span> -------------------------------- live log call --------------------------------
+<span class='linenum'>0077:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:83 [FFF] старт фильтрации</span>
+<span class='linenum'>0078:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:34 [FFF] 1d SMA_fast=2.0 SMA_slow=1.75</span>
+<span class='linenum'>0079:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:152 [FFF] прошла все фильтры</span>
+<span class='linenum'>0080:</span> PASSED
+<span class='linenum'>0081:</span> <span class='case' id='line81'>tests/test_fetch_and_filter_pairs.py::test_fetch_and_filter_pairs_matrix[skip_args10-True-\u041f\u0440\u043e\u043f\u0443\u0441\u043a \u0432\u0441\u0435\u0445 \u0444\u0438\u043b\u044c\u0442\u0440\u043e\u0432] [CASE] Пропуск всех фильтров | expected_pass=True | skip_args={&#39;skip_riskguard_for&#39;: [&#39;FFF/USDT&#39;], &#39;skip_volume_for&#39;: [&#39;FFF/USDT&#39;], &#39;skip_spread_for&#39;: [&#39;FFF/USDT&#39;], &#39;skip_trend_d1_for&#39;: [&#39;FFF/USDT&#39;], &#39;skip_trend_ltf_for&#39;: [&#39;FFF/USDT&#39;]}</span>
+<span class='linenum'>0082:</span> 
+<span class='linenum'>0083:</span> -------------------------------- live log call --------------------------------
+<span class='linenum'>0084:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:83 [FFF] старт фильтрации</span>
+<span class='linenum'>0085:</span> <span class='fff'>DEBUG    bot_ai.selector.pipeline:pipeline.py:152 [FFF] прошла все фильтры</span>
+<span class='linenum'>0086:</span> PASSED
+<span class='linenum'>0087:</span> 
+<span class='linenum'>0088:</span> ============================= 11 passed in 1.56s ==============================
+</pre></body></html>

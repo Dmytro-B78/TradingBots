@@ -1,60 +1,50 @@
-﻿# bot_ai/exec/executor.py
-# Полная версия файла. Добавлено:
-# - Уникальный идентификатор сделки (trade_id, UUID4)
-# - Режим работы (mode: "paper" или "live")
-# - Источник сигнала (signal_source)
-# - Мини-тест в блоке __main__
-# - Исправлено предупреждение: datetime.now(timezone.utc)
-
-import csv
+﻿import csv
 import os
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
-
+from bot_ai.risk.risk_guard import TradeContext
 
 class TradeExecutor:
     """
     Исполнитель сделок: логирование в CSV с уникальным ID, режимом и источником сигнала.
+    Может интегрироваться с RiskGuard для проверки сделки перед записью.
     """
 
-    def __init__(self, log_file: str = "trades_log.csv", mode: str = "paper") -> None:
-        """
-        Параметры:
-        - log_file: путь к CSV-файлу логирования сделок.
-        - mode: режим работы бота, допустимые значения: "paper" или "live".
-        """
+    def __init__(self, log_file: str = "trades_log.csv", mode: str = "paper", risk_guard=None) -> None:
         self.log_file = log_file
         self.mode = self._validate_mode(mode)
+        self.risk_guard = risk_guard
 
     @staticmethod
     def _validate_mode(mode: str) -> str:
-        """
-        Валидация режима работы. Возвращает корректное значение или поднимает ValueError.
-        """
         allowed = {"paper", "live"}
         normalized = str(mode).strip().lower()
         if normalized not in allowed:
             raise ValueError(f"Invalid mode '{mode}'. Allowed: {sorted(allowed)}")
         return normalized
 
-    def log_trade_to_csv(self, trade: Dict[str, Any], signal_source: str = "unknown") -> str:
+    def log_trade_to_csv(self, trade: Dict[str, Any], signal_source: str = "unknown") -> Dict[str, Any]:
         """
-        Логирование сделки в CSV.
-
-        Обязательные ключи trade:
-        - symbol: строка, тикер инструмента (пример: "BTCUSDT")
-        - side: строка, "BUY" или "SELL"
-        - price: число, цена исполнения
-        - qty: число, количество
-        Необязательные ключи:
-        - sl: число, стоп-лосс
-        - tp: число, тейк-профит
-
-        Возвращает:
-        - trade_id (строка UUID), под которым сделка записана.
+        Логирование сделки в CSV. Перед записью проверяет RiskGuard (если задан).
+        Возвращает словарь строки, записанной в CSV.
         """
         self._validate_trade(trade)
+
+        # Проверка RiskGuard
+        if self.risk_guard:
+            ctx = TradeContext(
+                symbol=trade["symbol"],
+                side=trade["side"].lower(),
+                price=float(trade["price"]),
+                equity_usdt=trade.get("equity_usdt", 0),
+                daily_pnl_usdt=trade.get("daily_pnl_usdt", 0),
+                spread_pct=trade.get("spread_pct", 0),
+                vol24h_usdt=trade.get("vol24h_usdt", 0)
+            )
+            allowed = self.risk_guard.check(ctx)
+            if not allowed:
+                raise PermissionError(f"Trade blocked by RiskGuard: {ctx.symbol}")
 
         file_exists = os.path.isfile(self.log_file)
         trade_id = str(uuid.uuid4())
@@ -87,7 +77,7 @@ class TradeExecutor:
                 writer.writeheader()
             writer.writerow(row)
 
-        return trade_id
+        return row
 
     @staticmethod
     def _to_number(value: Optional[Any]) -> Optional[float]:
@@ -123,7 +113,6 @@ class TradeExecutor:
         if trade.get("tp") is not None:
             _ = TradeExecutor._to_number(trade.get("tp"))
 
-
 if __name__ == "__main__":
     executor = TradeExecutor(log_file="trades_log.csv", mode="paper")
     trade = {
@@ -134,5 +123,5 @@ if __name__ == "__main__":
         "sl": 26500.0,
         "tp": 28000.0
     }
-    trade_id = executor.log_trade_to_csv(trade, signal_source="AI_strategy")
-    print(f"✅ Сделка записана в trades_log.csv, trade_id={trade_id}")
+    row = executor.log_trade_to_csv(trade, signal_source="AI_strategy")
+    print(f"✅ Сделка записана в trades_log.csv: {row}")

@@ -1,0 +1,2 @@
+timestamp,symbol,reason,details,mode,current_loss,limit
+2025-10-01T20:35:22.063218+02:00,ADAUSDT,position_size,200.00% > 50%,unknown,,

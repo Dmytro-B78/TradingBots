@@ -1,0 +1,2 @@
+timestamp,symbol,reason,details,mode,current_loss,limit
+2025-10-01T20:35:22.045750+02:00,SOLUSDT,max_positions,1 >= 1,unknown,,

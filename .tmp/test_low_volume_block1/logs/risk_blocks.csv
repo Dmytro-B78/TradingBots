@@ -1,0 +1,2 @@
+timestamp,symbol,reason,details,mode,current_loss,limit
+2025-10-01T20:35:22.039475+02:00,LTCUSDT,low_volume,50 < 1000,unknown,,
