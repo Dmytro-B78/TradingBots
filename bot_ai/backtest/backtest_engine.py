@@ -34,13 +34,17 @@ def run_backtest(cfg, pairs, strategy_fn, strategy_name, days=365, timeframes=No
     ex_class = getattr(ccxt, cfg.exchange)
     ex = ex_class()
 
+    # Инициализация риск‑модулей
+    rg = RiskGuard(cfg)
+    ps = PositionSizer(cfg)
+    sltp = DynamicSLTP(cfg)
+
     for pair in pairs:
         logger.info(f"[BACKTEST] {strategy_name} {pair} старт")
         try:
             for tf in timeframes:
-                limit = days * 24 if "h" in tf else days  # грубая оценка количества свечей
+                limit = days * 24 if "h" in tf else days
                 try:
-                    # 🔹 FIX: добавляем параметр since=None для совместимости с тестовым DummyExchange
                     ohlcv = ex.fetch_ohlcv(pair, timeframe=tf, since=None, limit=limit)
                     df = pd.DataFrame(ohlcv, columns=["time", "open", "high", "low", "close", "volume"])
                     df["time"] = pd.to_datetime(df["time"], unit="ms")
@@ -48,7 +52,6 @@ def run_backtest(cfg, pairs, strategy_fn, strategy_name, days=365, timeframes=No
                     logger.error(f"[ERROR] {pair} {tf}: не удалось загрузить OHLCV — {e}")
                     df = pd.DataFrame()
 
-                # --- Отладочный вывод ---
                 if df.empty:
                     logger.warning(f"[DEBUG] {pair} {tf}: пустой датафрейм")
                 else:
@@ -57,11 +60,22 @@ def run_backtest(cfg, pairs, strategy_fn, strategy_name, days=365, timeframes=No
                     logger.debug(f"[DEBUG] {pair} {tf}: колонки {list(df.columns)}")
                     logger.debug(f"[DEBUG] {pair} {tf}: первые строки:\n{df.head()}")
 
-                # Применяем стратегию
                 strat_df = strategy_fn(df) if not df.empty else pd.DataFrame()
 
+                # 🔹 Фильтрация сделок через RiskGuard
                 if strat_df is not None and not strat_df.empty:
-                    results.append(strat_df)
+                    filtered_trades = []
+                    for _, trade in strat_df.iterrows():
+                        if rg.can_open_trade(pair):
+                            size = ps.calculate(pair, trade)
+                            sl, tp = sltp.calculate(df, trade)
+                            rg.register_trade(pair, trade)
+                            # Можно добавить trade в итог, если нужно
+                            filtered_trades.append(trade)
+                    if filtered_trades:
+                        results.append(pd.DataFrame(filtered_trades))
+                    else:
+                        logger.debug(f"[DEBUG] {pair} {tf}: все сделки отклонены RiskGuard/PositionSizer/DynamicSLTP")
                 else:
                     logger.debug(f"[DEBUG] {pair} {tf}: стратегия вернула пустой результат")
 
