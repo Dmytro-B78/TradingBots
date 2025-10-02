@@ -1,2 +1,7 @@
 ﻿pytest
 pytest-cov
+pandas
+numpy
+requests
+matplotlib
+scikit-learn
