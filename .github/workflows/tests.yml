@@ -24,6 +24,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # 🔹 Устанавливаем tzlocal для тестов
+      - name: Install tzlocal
+        run: |
+          python -m pip install tzlocal
+
       # 🔹 Удаляем BOM перед тестами
       - name: Remove BOM from pytest.ini
         shell: pwsh
