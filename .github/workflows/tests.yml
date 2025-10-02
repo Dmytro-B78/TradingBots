@@ -1,0 +1,59 @@
+﻿name: NeuroTrade CI Test
+
+on:
+  push:
+    branches: [ "ci-test" ]
+  pull_request:
+    branches: [ "ci-test" ]
+
+jobs:
+  tests:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run unified test runner
+        shell: pwsh
+        run: |
+          .\run_tests.ps1 -Target ci -CoverageMin 85
+
+      - name: Upload coverage reports (JSON)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: coverage_reports/
+
+      - name: Upload HTML coverage to Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: htmlcov/
+
+  deploy:
+    needs: tests
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download Pages artifact
+        uses: actions/download-pages-artifact@v3
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
