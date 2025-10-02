@@ -3,6 +3,11 @@ import logging
 import pandas as pd
 import ccxt
 
+# 🔹 Импорты для тестов — чтобы monkeypatch мог подменять классы
+from bot_ai.risk.risk_guard import RiskGuard
+from bot_ai.risk.position_sizer import PositionSizer
+from bot_ai.risk.dynamic_sl_tp import DynamicSLTP
+
 logger = logging.getLogger(__name__)
 
 def run_backtest(cfg, pairs, strategy_fn, strategy_name, days=365, timeframes=None):
