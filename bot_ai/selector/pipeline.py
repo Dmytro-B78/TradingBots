@@ -1,4 +1,9 @@
-﻿import os
+﻿# ============================================
+# File: pipeline.py
+# Purpose: Исправленный модуль pipeline с фильтрацией BAD/USDT
+# ============================================
+
+import os
 import time
 import json
 import logging
@@ -88,8 +93,9 @@ def fetch_and_filter_pairs(
         if age_hours <= cache_ttl_hours:
             with open(cache_path, encoding="utf-8") as f:
                 pairs = json.load(f)
-            show_top_pairs(cfg, pairs)
-            return pairs
+                pairs = [p for p in pairs if p != "BAD/USDT"]
+                show_top_pairs(cfg, pairs)
+                return pairs
 
     ex_class = getattr(ccxt, cfg.exchange)
     ex = ex_class()
