@@ -13,16 +13,8 @@ logger = logging.getLogger(__name__)
 def run_backtest(cfg, pairs, strategy_fn, strategy_name, days=365, timeframes=None):
     """
     Запуск бэктеста по списку пар и таймфреймов.
-    Здесь мы сами тянем OHLCV через CCXT, чтобы видеть реальные данные.
-    :param cfg: объект конфигурации
-    :param pairs: список торговых пар
-    :param strategy_fn: функция стратегии
-    :param strategy_name: имя стратегии
-    :param days: количество дней для бэктеста
-    :param timeframes: список таймфреймов
     :return: DataFrame с результатами или None, если сделок нет
     """
-    # 🔹 FIX: при пустом списке пар сразу возвращаем None
     if not pairs:
         logger.info(f"[BACKTEST] {strategy_name} завершён. Сделок нет.")
         return None
@@ -30,11 +22,9 @@ def run_backtest(cfg, pairs, strategy_fn, strategy_name, days=365, timeframes=No
     results = []
     timeframes = timeframes or ["1h"]
 
-    # Инициализация биржи
     ex_class = getattr(ccxt, cfg.exchange)
     ex = ex_class()
 
-    # Инициализация риск‑модулей
     rg = RiskGuard(cfg)
     ps = PositionSizer(cfg)
     sltp = DynamicSLTP(cfg)
@@ -54,28 +44,29 @@ def run_backtest(cfg, pairs, strategy_fn, strategy_name, days=365, timeframes=No
 
                 if df.empty:
                     logger.warning(f"[DEBUG] {pair} {tf}: пустой датафрейм")
-                else:
-                    logger.debug(f"[DEBUG] {pair} {tf}: загружено {len(df)} свечей")
-                    logger.debug(f"[DEBUG] {pair} {tf}: даты {df['time'].min()} — {df['time'].max()}")
-                    logger.debug(f"[DEBUG] {pair} {tf}: колонки {list(df.columns)}")
-                    logger.debug(f"[DEBUG] {pair} {tf}: первые строки:\n{df.head()}")
+                    continue
+
+                logger.debug(f"[DEBUG] {pair} {tf}: загружено {len(df)} свечей")
+                logger.debug(f"[DEBUG] {pair} {tf}: даты {df['time'].min()} — {df['time'].max()}")
+                logger.debug(f"[DEBUG] {pair} {tf}: колонки {list(df.columns)}")
+                logger.debug(f"[DEBUG] {pair} {tf}: первые строки:\n{df.head()}")
 
                 strat_df = strategy_fn(df) if not df.empty else pd.DataFrame()
 
-                # 🔹 Фильтрация сделок через RiskGuard
                 if strat_df is not None and not strat_df.empty:
                     filtered_trades = []
                     for _, trade in strat_df.iterrows():
-                        if rg.can_open_trade(pair):
-                            size = ps.calculate(pair, trade)
-                            sl, tp = sltp.calculate(df, trade)
-                            rg.register_trade(pair, trade)
-                            # Можно добавить trade в итог, если нужно
-                            filtered_trades.append(trade)
+                        if not rg.can_open_trade(pair):
+                            continue
+                        size = ps.calculate(pair, trade)
+                        sl, tp = sltp.calculate(df, trade)
+                        rg.register_trade(pair, trade)
+                        # Если фильтры пропустили сделку — добавляем
+                        filtered_trades.append(trade)
                     if filtered_trades:
                         results.append(pd.DataFrame(filtered_trades))
                     else:
-                        logger.debug(f"[DEBUG] {pair} {tf}: все сделки отклонены RiskGuard/PositionSizer/DynamicSLTP")
+                        logger.debug(f"[DEBUG] {pair} {tf}: все сделки отклонены фильтрами")
                 else:
                     logger.debug(f"[DEBUG] {pair} {tf}: стратегия вернула пустой результат")
 
