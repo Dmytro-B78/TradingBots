@@ -35,7 +35,7 @@ if (-Not (Test-Path coverage_reports)) {
     New-Item -ItemType Directory -Path coverage_reports | Out-Null
 }
 
-# Шаг 4 — Задаём свой temp-каталог для pytest, чтобы избежать PermissionError
+# Шаг 4 — Задаём свой temp-каталог для pytest
 $env:PYTEST_ADDOPTS = "--basetemp=./.pytest_temp"
 
 # Шаг 5 — Добавляем корень проекта в PYTHONPATH
