@@ -24,7 +24,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 🔹 Шаг удаления BOM до запуска тестов
+      # 🔹 Удаляем BOM перед тестами
       - name: Remove BOM from pytest.ini
         shell: pwsh
         run: |
@@ -33,6 +33,14 @@ jobs:
           Set-Content -Path pytest.ini -Value $content -Encoding UTF8
           Write-Host "pytest.ini saved without BOM."
 
+      # 🔹 Отладочный запуск pytest без ковереджа
+      - name: Debug pytest run
+        shell: pwsh
+        run: |
+          Write-Host "Running pytest in debug mode..."
+          python -m pytest tests -vv --maxfail=1 --disable-warnings
+
+      # 🔹 Основной запуск с ковереджем
       - name: Run unified test runner
         shell: pwsh
         run: .\run_tests.ps1 -Target ci -CoverageMin 85
