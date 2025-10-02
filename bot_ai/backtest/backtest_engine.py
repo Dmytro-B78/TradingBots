@@ -20,9 +20,9 @@ def run_backtest(cfg, pairs, strategy_fn, strategy_name, days=365, timeframes=No
     :param strategy_name: имя стратегии
     :param days: количество дней для бэктеста
     :param timeframes: список таймфреймов
-    :return: DataFrame с результатами или None, если пар нет
+    :return: DataFrame с результатами или None, если сделок нет
     """
-    # 🔹 FIX: при пустом списке пар сразу возвращаем None, чтобы пройти тест
+    # 🔹 FIX: при пустом списке пар сразу возвращаем None
     if not pairs:
         logger.info(f"[BACKTEST] {strategy_name} завершён. Сделок нет.")
         return None
@@ -40,7 +40,8 @@ def run_backtest(cfg, pairs, strategy_fn, strategy_name, days=365, timeframes=No
             for tf in timeframes:
                 limit = days * 24 if "h" in tf else days  # грубая оценка количества свечей
                 try:
-                    ohlcv = ex.fetch_ohlcv(pair, timeframe=tf, limit=limit)
+                    # 🔹 FIX: добавляем параметр since=None для совместимости с тестовым DummyExchange
+                    ohlcv = ex.fetch_ohlcv(pair, timeframe=tf, since=None, limit=limit)
                     df = pd.DataFrame(ohlcv, columns=["time", "open", "high", "low", "close", "volume"])
                     df["time"] = pd.to_datetime(df["time"], unit="ms")
                 except Exception as e:
@@ -69,8 +70,11 @@ def run_backtest(cfg, pairs, strategy_fn, strategy_name, days=365, timeframes=No
 
     if results:
         merged = pd.concat(results, ignore_index=True)
+        if merged.empty:
+            logger.info(f"[BACKTEST] {strategy_name} завершён. Сделок нет.")
+            return None
         logger.info(f"[BACKTEST] {strategy_name} завершён. Всего сделок: {len(merged)}")
         return merged
     else:
         logger.info(f"[BACKTEST] {strategy_name} завершён. Сделок нет.")
-        return pd.DataFrame()
+        return None
