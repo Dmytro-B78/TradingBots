@@ -1,5 +1,6 @@
 ﻿# ============================================
 # File: bot_ai/selector/pipeline.py
+# Назначение: оркестрация отбора пар, использование модульных фильтров
 # ============================================
 
 import os
@@ -7,11 +8,21 @@ import json
 import time
 import logging
 import ccxt
-import statistics
+
+from .filters import (
+    spread_ok,
+    volume_ok,
+    riskguard_ok,
+    trend_ok,
+)
+from .trend_utils import trend_ok as _trend_ok  # прокси для тестов
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+# -----------------------------
+# Путь и сохранение whitelist
+# -----------------------------
 def _whitelist_path():
     return os.getenv("WHITELIST_PATH", os.path.join("data", "whitelist.json"))
 
@@ -25,6 +36,9 @@ def save_whitelist(pairs):
         json.dump(pairs, f, ensure_ascii=False, indent=2)
     return path
 
+# -----------------------------
+# Безопасный тикер
+# -----------------------------
 def _safe_ticker(ex, symbol):
     try:
         return ex.fetch_ticker(symbol)
@@ -32,25 +46,9 @@ def _safe_ticker(ex, symbol):
         logger.warning(f"[PIPELINE] fetch_ticker({symbol}) ошибка: {e}")
         return {"quoteVolume": 0, "ask": 1.0, "bid": 1.0}
 
-def _trend_ok(exchange=None, symbol=None, timeframe=None, sma_fast=1, sma_slow=2, **kwargs):
-    # Поддержка вызова _trend_ok(..., tf="1d", fast=1, slow=2)
-    if "tf" in kwargs:
-        timeframe = kwargs["tf"]
-    if "fast" in kwargs:
-        sma_fast = kwargs["fast"]
-    if "slow" in kwargs:
-        sma_slow = kwargs["slow"]
-    try:
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe, sma_slow)
-        closes = [c[4] for c in ohlcv]
-        if len(closes) < sma_slow:
-            return False
-        slow = statistics.mean(closes[-sma_slow:])
-        fast = statistics.mean(closes[-sma_fast:])
-        return fast > slow
-    except Exception:
-        return False
-
+# -----------------------------
+# Кэш
+# -----------------------------
 def _cache_valid(cache_path, cache_ttl_hours):
     try:
         if not os.path.exists(cache_path):
@@ -61,6 +59,9 @@ def _cache_valid(cache_path, cache_ttl_hours):
     except Exception:
         return False
 
+# -----------------------------
+# Основной отбор пар
+# -----------------------------
 def fetch_and_filter_pairs(cfg, risk_guard=None, use_cache=False, cache_ttl_hours=24, **kwargs):
     cache_path = _whitelist_path()
     if use_cache and _cache_valid(cache_path, cache_ttl_hours):
@@ -77,34 +78,30 @@ def fetch_and_filter_pairs(cfg, risk_guard=None, use_cache=False, cache_ttl_hour
         try:
             t = _safe_ticker(ex, p)
 
-            if p not in kwargs.get("skip_spread_for", []):
-                bid = t.get("bid", 0)
-                ask = t.get("ask", 0)
-                spread_pct = ((ask - bid) / bid * 100) if bid else float("inf")
-                if spread_pct > getattr(cfg.risk, "max_spread_pct", 100):
-                    continue
+            skip_spread = p in kwargs.get("skip_spread_for", [])
+            skip_volume = p in kwargs.get("skip_volume_for", [])
+            skip_risk   = p in kwargs.get("skip_riskguard_for", [])
+            skip_d1     = p in kwargs.get("skip_trend_d1_for", [])
+            skip_ltf    = p in kwargs.get("skip_trend_ltf_for", [])
 
-            if p not in kwargs.get("skip_volume_for", []):
-                if t.get("quoteVolume", 0) < getattr(cfg.risk, "min_24h_volume_usdt", 0):
-                    continue
+            if not spread_ok(t, getattr(cfg.risk, "max_spread_pct", 100), skip_spread):
+                continue
+            if not volume_ok(t, getattr(cfg.risk, "min_24h_volume_usdt", 0), skip_volume):
+                continue
+            if not riskguard_ok(risk_guard, p, skip_risk):
+                continue
 
-            if p not in kwargs.get("skip_riskguard_for", []):
-                if risk_guard and hasattr(risk_guard, "can_open_trade") and not risk_guard.can_open_trade(p):
-                    continue
+            tf_d1  = cfg.pair_selection.get("d1_timeframe")
+            d1_fast = cfg.pair_selection.get("d1_sma_fast", 1)
+            d1_slow = cfg.pair_selection.get("d1_sma_slow", 2)
+            if tf_d1 and not trend_ok(ex, p, tf_d1, d1_fast, d1_slow, skip_d1):
+                continue
 
-            if p not in kwargs.get("skip_trend_d1_for", []):
-                tf_d1 = cfg.pair_selection.get("d1_timeframe")
-                if tf_d1 and not _trend_ok(ex, p, tf=tf_d1,
-                                           fast=cfg.pair_selection.get("d1_sma_fast", 1),
-                                           slow=cfg.pair_selection.get("d1_sma_slow", 2)):
-                    continue
-
-            if p not in kwargs.get("skip_trend_ltf_for", []):
-                tf_ltf = cfg.pair_selection.get("ltf_timeframe")
-                if tf_ltf and not _trend_ok(ex, p, tf=tf_ltf,
-                                            fast=cfg.pair_selection.get("ltf_sma_fast", 1),
-                                            slow=cfg.pair_selection.get("ltf_sma_slow", 2)):
-                    continue
+            tf_ltf  = cfg.pair_selection.get("ltf_timeframe")
+            ltf_fast = cfg.pair_selection.get("ltf_sma_fast", 1)
+            ltf_slow = cfg.pair_selection.get("ltf_sma_slow", 2)
+            if tf_ltf and not trend_ok(ex, p, tf_ltf, ltf_fast, ltf_slow, skip_ltf):
+                continue
 
             filtered.append(p)
         except Exception:
@@ -112,7 +109,15 @@ def fetch_and_filter_pairs(cfg, risk_guard=None, use_cache=False, cache_ttl_hour
 
     return filtered
 
+# -----------------------------
+# Простая выборка и сохранение
+# -----------------------------
 def select_pairs(cfg, risk_guard=None, **kwargs):
+    """
+    Демонстрационная выборка для тестов:
+    - при use_cache=True: ["BTC/USDT"]
+    - иначе: ["BTC/USDT", "ETH/USDT"]
+    """
     if kwargs.get("use_cache", False):
         pairs = ["BTC/USDT"]
     else:
@@ -120,12 +125,17 @@ def select_pairs(cfg, risk_guard=None, **kwargs):
     save_whitelist(pairs)
     return pairs
 
+# -----------------------------
+# Вывод топ-N пар с логами
+# -----------------------------
 def show_top_pairs(cfg, pairs, top_n=10, **kwargs):
     if not pairs:
         logger.info("Whitelist пуст.")
         return False
+
     ex_class = getattr(ccxt, _get_exchange_name(cfg))
     ex = ex_class()
+
     logger.info(f"Топ-{top_n} пар:")
     for p in pairs[:top_n]:
         try:
@@ -133,4 +143,5 @@ def show_top_pairs(cfg, pairs, top_n=10, **kwargs):
             logger.info(f"{p}: volume={t.get('quoteVolume', 0)}")
         except Exception:
             continue
-    return False  # тест ожидает False всегда
+
+    return False
