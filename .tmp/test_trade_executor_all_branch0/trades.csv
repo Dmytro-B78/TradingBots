@@ -1,3 +1,0 @@
-trade_id,timestamp,symbol,side,price,qty,sl,tp,mode,signal_source
-fd8a1c5a-e015-4c46-b617-c3a6ea50cf9f,2025-10-01T18:35:18.794231+00:00,BTCUSDT,BUY,100.0,1.0,90.0,110.0,paper,test
-b6b00d7d-692b-4aec-aae3-39892fc9d689,2025-10-01T18:35:18.795155+00:00,BTCUSDT,BUY,100.0,1.0,90.0,110.0,paper,unknown

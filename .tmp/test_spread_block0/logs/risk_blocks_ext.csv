@@ -1,2 +1,0 @@
-timestamp,symbol,side,price,equity_usdt,daily_pnl_usdt,spread_pct,vol24h_usdt,reason
-2025-10-01T18:35:22.076453+00:00,AVAXUSDT,sell,10,1000,0,1.0,5000,unknown

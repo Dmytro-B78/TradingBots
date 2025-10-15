@@ -1,1 +1,0 @@
-{"risk": {"min_24h_volume_usdt": 2000000}, "sl_tp": {"sl_type": "fixed", "sl_value": 1.5}, "pair_selection": {"d1_timeframe": "4h"}}
