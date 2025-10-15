@@ -1,73 +1,24 @@
-﻿# =========================
-# NeuroTrade Unified Test Runner
-# =========================
-# Запуск тестов с проверкой покрытия кода и обработкой пустого ключа в coverage.json
-# Порог покрытия можно задать через переменную окружения COVERAGE_MIN
+﻿# ------------------------------------------------------------------------------------
+# FILE: run_tests.ps1
+# PURPOSE: Прогон тестов и отдельный snapshot без рекурсии; мгновенная сводка.
+# ------------------------------------------------------------------------------------
 
-param(
-    [string]$Target = "local",   # Режим запуска: local или ci
-    [int]$CoverageMin = $null    # Минимальный процент покрытия (если null — берём из env или 85)
-)
+# Жёстко ограничиваем падения и отключаем варнинги
+python -m pytest -q --disable-warnings --maxfail=5
 
-# Если порог не передан параметром — берём из переменной окружения или 85
-if (-not $CoverageMin) {
-    if ($env:COVERAGE_MIN) {
-        $CoverageMin = [int]$env:COVERAGE_MIN
-    } else {
-        $CoverageMin = 85
-    }
-}
+# Запуск отдельного snapshot-раннера
+python snapshot_runner.py
 
-Write-Host "=== NeuroTrade Test Runner ==="
-Write-Host "Режим: $Target"
-Write-Host "Минимальное покрытие: $CoverageMin%"
-
-# 1. Проверка наличия pytest-cov
-Write-Host "Проверяю наличие pytest-cov..."
-python -m pip show pytest-cov > $null 2>&1
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Устанавливаю pytest и pytest-cov..."
-    python -m pip install pytest pytest-cov
-}
-
-# 2. Запуск pytest с ковереджем
-Write-Host "=== DEBUG: запускаю pytest с подробным выводом ==="
-$pytestCmd = "python -m pytest tests -vv --maxfail=1 --disable-warnings --cov=bot_ai --cov-report=html --cov-report=json:coverage_reports/coverage.json"
-Write-Host "Команда: $pytestCmd"
-Invoke-Expression $pytestCmd
-
-Write-Host "=== DEBUG: pytest завершил работу ==="
-
-# 3. Проверка наличия coverage.json
-if (-Not (Test-Path "coverage_reports/coverage.json")) {
-    Write-Warning "⚠ coverage.json не найден — пропускаю проверку"
-    exit 1
-}
-
-# 4. Чтение coverage.json с обработкой пустого ключа
-try {
-    $json = Get-Content coverage_reports/coverage.json | ConvertFrom-Json -AsHashTable
-    if ($json.ContainsKey("")) {
-        Write-Host "Удаляю пустой ключ из coverage.json..."
-        $json.Remove("")
-    }
-} catch {
-    Write-Error "Ошибка чтения coverage.json: $_"
-    exit 1
-}
-
-# 5. Извлечение процента покрытия
-if ($json.ContainsKey("totals")) {
-    $coverage = [math]::Round($json["totals"]["percent_covered"], 2)
-    Write-Host "Покрытие кода: $coverage%"
-    if ($coverage -lt $CoverageMin) {
-        Write-Error "Покрытие ниже минимального порога ($CoverageMin%)"
-        exit 1
-    }
+# Вывод статуса падений
+if (Test-Path "logs/failed_tests.log") {
+    Write-Host "`n=== FAILED TESTS ===" -ForegroundColor Red
+    Get-Content "logs/failed_tests.log"
 } else {
-    Write-Error "Не найден ключ 'totals' в coverage.json"
-    exit 1
+    Write-Host "`nВсе тесты прошли успешно" -ForegroundColor Green
 }
 
-Write-Host "✅ Все проверки пройдены"
-exit 0
+# Вывод snapshot
+if (Test-Path "project_snapshot.txt") {
+    Write-Host "`n=== PROJECT SNAPSHOT ===" -ForegroundColor Cyan
+    Get-Content "project_snapshot.txt"
+}

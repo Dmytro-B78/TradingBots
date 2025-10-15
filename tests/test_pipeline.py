@@ -1,5 +1,6 @@
 ﻿import pytest
 import json
+import builtins
 from types import SimpleNamespace
 from bot_ai.selector import pipeline
 
@@ -44,19 +45,37 @@ def test_select_pairs_no_cache(monkeypatch, tmp_path):
     monkeypatch.setattr(pipeline, "show_top_pairs", lambda *a, **k: None)
     monkeypatch.setattr(pipeline.os, "makedirs", lambda *a, **k: None)
     monkeypatch.setattr(pipeline.os.path, "exists", lambda p: False)
+
+    whitelist_file = tmp_path / "whitelist.json"
+    real_open = builtins.open
+    def fake_open(path, mode="r", *a, **k):
+        if isinstance(path, str) and "whitelist.json" in path:
+            return real_open(whitelist_file, mode, *a, **k)
+        return real_open(path, mode, *a, **k)
+    monkeypatch.setattr("builtins.open", fake_open)
+    monkeypatch.setattr(pipeline.json, "dump", lambda obj, f, *a, **k: None)
+
     result = pipeline.select_pairs(cfg, risk_guard=None)
     assert isinstance(result, list)
     assert "BTC/USDT" in result or "ETH/USDT" in result
 
 def test_select_pairs_with_cache(monkeypatch, tmp_path):
     cfg = make_cfg()
-    cache_file = tmp_path / "whitelist.json"
-    cache_file.write_text(json.dumps(["BTC/USDT"]))
+    whitelist_file = tmp_path / "whitelist.json"
+    whitelist_file.write_text(json.dumps(["BTC/USDT"]), encoding="utf-8")
+
+    monkeypatch.setattr(pipeline, "_whitelist_path", lambda: str(whitelist_file))
+    real_open = builtins.open
+    def fake_open(path, mode="r", *a, **k):
+        if isinstance(path, str) and "whitelist.json" in path:
+            return real_open(whitelist_file, mode, *a, **k)
+        return real_open(path, mode, *a, **k)
+    monkeypatch.setattr("builtins.open", fake_open)
+    monkeypatch.setattr(pipeline.json, "load", lambda f: ["BTC/USDT"])
     monkeypatch.setattr(pipeline.os.path, "exists", lambda p: True)
     monkeypatch.setattr(pipeline.os.path, "getmtime", lambda p: pipeline.time.time())
     monkeypatch.setattr(pipeline, "show_top_pairs", lambda *a, **k: None)
     monkeypatch.setattr(pipeline.ccxt, "binance", lambda *a, **k: DummyExchange())
-    # Перехватываем json.load внутри pipeline, чтобы вернуть ровно ["BTC/USDT"]
-    monkeypatch.setattr(pipeline.json, "load", lambda f: ["BTC/USDT"])
+
     result = pipeline.fetch_and_filter_pairs(cfg, use_cache=True, cache_ttl_hours=24)
     assert result == ["BTC/USDT"]
