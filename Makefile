@@ -15,9 +15,11 @@ setup:
 	@echo "=== Setup complete ==="
 
 test:
+	if not exist "$(TMP_DIR)" mkdir "$(TMP_DIR)"
 	set TMP=$(TMP_DIR) && set TEMP=$(TMP_DIR) && "$(VENV_PYTHON)" -m pytest -v --basetemp=$(TMP_DIR)
 
 coverage:
+	if not exist "$(TMP_DIR)" mkdir "$(TMP_DIR)"
 	set TMP=$(TMP_DIR) && set TEMP=$(TMP_DIR) && "$(VENV_PYTHON)" -m pytest --cov=bot_ai --cov-report=html --basetemp=$(TMP_DIR)
 	@echo HTML report created in htmlcov/
 
@@ -25,6 +27,11 @@ publish-coverage:
 	gh-pages -d htmlcov
 
 ci: clean-tmp setup test coverage
+
+snapshot:
+	if not exist "$(TMP_DIR)" mkdir "$(TMP_DIR)"
+	"$(VENV_PYTHON)" snapshot_runner.py > "$(TMP_DIR)/snapshot.log" 2>&1
+	@echo Snapshot complete. See $(TMP_DIR)/snapshot.log and project_snapshot.txt
 
 env-check:
 	@echo "=== Environment check ==="
