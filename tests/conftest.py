@@ -1,35 +1,36 @@
 ﻿import os
 import shutil
-import stat
+import pytest
 
-# Сохраняем оригинал
-_ORIG_OS_REPLACE = os.replace
+# ============================
+# conftest.py для тестов NT
+# ============================
+# - Гарантирует наличие whitelist.json в temp
+# - Исправляет путь назначения (без пробелов)
+# - Использует os.path.join для кроссплатформенности
+# ============================
 
-def _ensure_writable(path: str):
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    try:
-        attrs = os.stat(path).st_mode
-        if attrs & stat.S_IREAD:
-            os.chmod(path, stat.S_IWRITE)
-    except FileNotFoundError:
-        pass
+@pytest.fixture(autouse=True)
+def prepare_whitelist(tmp_path):
+    """
+    Автоматическая фикстура:
+    - Создаёт копию data/whitelist.json в temp
+    - Обеспечивает корректный путь без пробелов
+    """
+    # Путь к исходному whitelist.json
+    src_file = os.path.join("data", "whitelist.json")
 
-def _safe_replace(src: str, dst: str):
-    # Если цель — data/whitelist.json, перенаправляем на WHITELIST_PATH
-    if os.path.normpath(dst).endswith(os.path.normpath("data/whitelist.json")):
-        dst = os.getenv("WHITELIST_PATH", os.path.join(os.getenv("TEMP", "/tmp"), "whitelist_test.json"))
-    try:
-        return _ORIG_OS_REPLACE(src, dst)
-    except PermissionError:
-        _ensure_writable(dst)
-        try:
-            if os.path.exists(dst):
-                os.remove(dst)
-        except Exception:
-            pass
-        with open(src, "rb") as fsrc, open(dst, "wb") as fdst:
-            shutil.copyfileobj(fsrc, fdst, length=1024 * 1024)
-        return None
+    # Путь к временному whitelist.json
+    dst_file = os.path.join(tmp_path, "whitelist_test.json")
 
-# Переопределяем глобально
-os.replace = _safe_replace
+    # Если исходного файла нет — создаём пустой
+    if not os.path.exists(src_file):
+        os.makedirs("data", exist_ok=True)
+        with open(src_file, "w", encoding="utf-8") as f:
+            f.write("{}")
+
+    # Копируем whitelist.json во временную папку
+    shutil.copyfile(src_file, dst_file)
+
+    # Возвращаем путь для тестов
+    return dst_file
