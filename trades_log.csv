@@ -1,3 +1,0 @@
-trade_id,timestamp,symbol,side,price,qty,sl,tp,mode,signal_source
-e276f76f-ca9e-441a-9c43-b1cd5ec4865d,2025-09-21T17:53:16.213316,BTCUSDT,BUY,27000.5,0.01,26500.0,28000.0,paper,AI_strategy
-e70c26e5-3703-4584-ba1e-dc6a5985a3f9,2025-09-21T17:54:54.986463+00:00,BTCUSDT,BUY,27000.5,0.01,26500.0,28000.0,paper,AI_strategy

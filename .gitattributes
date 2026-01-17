@@ -1,0 +1,7 @@
+﻿# Гарантируем LF для Makefile и скриптов
+Makefile text eol=lf
+*.sh      text eol=lf
+*.py      text eol=lf
+
+# Остальные файлы — авто
+* text=auto

@@ -1,39 +1,42 @@
+﻿from types import SimpleNamespace
+
 import pandas as pd
-from types import SimpleNamespace
+
 from bot_ai.exec.executor import TradeExecutor
 
 def main():
-    # Фейковая конфигурация
+    # Р¤РµР№РєРѕРІР°СЏ РєРѕРЅС„РёРіСѓСЂР°С†РёСЏ
     cfg = SimpleNamespace()
     cfg.mode = "dry-run"
     cfg.risk = SimpleNamespace(test_equity=1000)
 
-    # ✅ Добавляем фейковую секцию sl_tp, чтобы не падал расчёт SL/TP
+    # вњ… Р”РѕР±Р°РІР»СЏРµРј С„РµР№РєРѕРІСѓСЋ СЃРµРєС†РёСЋ sl_tp, С‡С‚РѕР±С‹ РЅРµ РїР°РґР°Р» СЂР°СЃС‡С‘С‚ SL/TP
     cfg.sl_tp = SimpleNamespace(
         atr_multiplier_sl=1.0,
         atr_multiplier_tp=2.0
     )
 
-    # Фейковые данные OHLCV
+    # Р¤РµР№РєРѕРІС‹Рµ РґР°РЅРЅС‹Рµ OHLCV
     ohlcv_df = pd.DataFrame({
         "high": [120, 121, 122],
         "low": [100, 101, 102],
         "close": [110, 111, 112]
     })
 
-    # Создаём исполнителя сделок
+    # РЎРѕР·РґР°С‘Рј РёСЃРїРѕР»РЅРёС‚РµР»СЏ СЃРґРµР»РѕРє
     executor = TradeExecutor(cfg)
 
-    # Открываем сделку с комментарием
+    # РћС‚РєСЂС‹РІР°РµРј СЃРґРµР»РєСѓ СЃ РєРѕРјРјРµРЅС‚Р°СЂРёРµРј
     executor.execute_trade(
         "BTC/USDT",
         "buy",
         110.0,
         ohlcv_df,
-        comment="Сигнал по EMA crossover"
+        comment="РЎРёРіРЅР°Р» РїРѕ EMA crossover"
     )
 
-    print("Сделка выполнена. Проверьте файл data/trades_log.csv")
+    print("РЎРґРµР»РєР° РІС‹РїРѕР»РЅРµРЅР°. РџСЂРѕРІРµСЂСЊС‚Рµ С„Р°Р№Р» data/trades_log.csv")
 
 if __name__ == "__main__":
     main()
+

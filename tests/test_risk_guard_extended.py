@@ -3,15 +3,12 @@
 # - Проверка кулдауна (cooldown_minutes)
 # - Проверка лимита по количеству позиций (max_positions)
 # - Проверка максимального размера позиции (max_position_size_pct)
-# - Интеграционный тест: RiskGuard → TradeExecutor
+# - Интеграционный тест: RiskGuard > TradeExecutor
 
-import pytest
 import time
-from pathlib import Path
 
-from bot_ai.risk.risk_guard import RiskGuard, TradeContext
 from bot_ai.exec.executor import TradeExecutor
-
+from bot_ai.risk.risk_guard import RiskGuard, TradeContext
 
 def make_ctx(**kwargs):
     """Упрощённый конструктор TradeContext с дефолтами"""
@@ -27,7 +24,6 @@ def make_ctx(**kwargs):
     defaults.update(kwargs)
     return TradeContext(**defaults)
 
-
 # === Проверка кулдауна ===
 def test_risk_guard_cooldown_blocks_trades(monkeypatch):
     cfg = {"risk": {"cooldown_minutes": 5}}
@@ -37,9 +33,12 @@ def test_risk_guard_cooldown_blocks_trades(monkeypatch):
     assert rg.check(ctx) is True  # первая сделка разрешена
 
     # monkeypatch time.time, чтобы имитировать "сразу после"
-    monkeypatch.setattr(time, "time", lambda: rg.last_trade_time + 60)  # 1 минута спустя
+    monkeypatch.setattr(
+        time,
+        "time",
+        lambda: rg.last_trade_time +
+        60)  # 1 минута спустя
     assert rg.check(ctx) is False  # блокировка из-за кулдауна
-
 
 # === Проверка лимита по количеству позиций ===
 def test_risk_guard_max_positions():
@@ -50,22 +49,23 @@ def test_risk_guard_max_positions():
     ctx = make_ctx()
     assert rg.check(ctx) is False
 
-
 # === Проверка максимального размера позиции ===
 def test_risk_guard_max_position_size():
     cfg = {"risk": {"max_position_size_pct": 10}}  # максимум 10% от equity
     rg = RiskGuard(cfg)
 
-    # Цена позиции = 2000, equity = 10_000 → 20% > 10%
+    # Цена позиции = 2000, equity = 10_000 > 20% > 10%
     ctx = make_ctx(price=2000)
     assert rg.check(ctx) is False
 
-
-# === Интеграционный тест: RiskGuard → TradeExecutor ===
+# === Интеграционный тест: RiskGuard > TradeExecutor ===
 def test_integration_risk_executor(tmp_path):
     cfg = {"risk": {"max_daily_loss_pct": 1}}
     rg = RiskGuard(cfg)
-    executor = TradeExecutor(log_file=str(tmp_path / "trades.csv"))  # <-- исправлено
+    executor = TradeExecutor(
+        log_file=str(
+            tmp_path /
+            "trades.csv"))  # <-- исправлено
 
     # Сигнал "BUY" подставляем вручную
     ctx = make_ctx(daily_pnl_usdt=-500)  # -5% убыток при equity=10_000
@@ -87,3 +87,4 @@ def test_integration_risk_executor(tmp_path):
         assert "BTCUSDT" not in content
     else:
         assert True  # файл даже не создан
+

@@ -1,8 +1,9 @@
-﻿import ccxt
-import pandas as pd
+﻿import logging
 import os
-import logging
 from datetime import datetime, timedelta
+
+import ccxt
+import pandas as pd
 
 def run_sma_backtest(cfg, pairs, days=30):
     logger = logging.getLogger(__name__)
@@ -21,12 +22,22 @@ def run_sma_backtest(cfg, pairs, days=30):
     summary = []
     for symbol in pairs:
         try:
-            since = exchange.parse8601((datetime.utcnow() - timedelta(days=days)).isoformat())
-            ohlcv = exchange.fetch_ohlcv(symbol, timeframe='1h', since=since, limit=days*24)
+            since = exchange.parse8601(
+                (datetime.utcnow() - timedelta(days=days)).isoformat())
+            ohlcv = exchange.fetch_ohlcv(
+                symbol, timeframe='1h', since=since, limit=days * 24)
             if not ohlcv:
                 continue
 
-            df = pd.DataFrame(ohlcv, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
+            df = pd.DataFrame(
+                ohlcv,
+                columns=[
+                    'time',
+                    'open',
+                    'high',
+                    'low',
+                    'close',
+                    'volume'])
             df['SMA5'] = df['close'].rolling(window=5).mean()
             df['SMA20'] = df['close'].rolling(window=20).mean()
 
@@ -39,34 +50,51 @@ def run_sma_backtest(cfg, pairs, days=30):
                     continue
 
                 # BUY
-                if df['SMA5'].iloc[i-1] < df['SMA20'].iloc[i-1] and df['SMA5'].iloc[i] > df['SMA20'].iloc[i]:
+                if df['SMA5'].iloc[i - 1] < df['SMA20'].iloc[i - \
+                    1] and df['SMA5'].iloc[i] > df['SMA20'].iloc[i]:
                     if position != "LONG":
                         position = "LONG"
                         entry_price = df['close'].iloc[i]
                         trades.append(("BUY", df['time'].iloc[i], entry_price))
 
                 # SELL
-                elif df['SMA5'].iloc[i-1] > df['SMA20'].iloc[i-1] and df['SMA5'].iloc[i] < df['SMA20'].iloc[i]:
+                elif df['SMA5'].iloc[i - 1] > df['SMA20'].iloc[i - 1] and df['SMA5'].iloc[i] < df['SMA20'].iloc[i]:
                     if position == "LONG":
                         exit_price = df['close'].iloc[i]
                         profit = (exit_price - entry_price) / entry_price * 100
-                        trades.append(("SELL", df['time'].iloc[i], exit_price, profit))
+                        trades.append(
+                            ("SELL", df['time'].iloc[i], exit_price, profit))
                         position = None
 
             # Сохраняем сделки
-            trades_df = pd.DataFrame(trades, columns=['Action', 'Time', 'Price', 'Profit(%)'])
-            trades_file = os.path.join(results_dir, f"{symbol.replace('/', '_')}_trades.csv")
+            trades_df = pd.DataFrame(
+                trades,
+                columns=[
+                    'Action',
+                    'Time',
+                    'Price',
+                    'Profit(%)'])
+            trades_file = os.path.join(
+                results_dir, f"{
+                    symbol.replace(
+                        '/', '_')}_trades.csv")
             trades_df.to_csv(trades_file, index=False)
 
             total_profit = trades_df['Profit(%)'].sum(skipna=True)
-            summary.append((symbol, len(trades_df)//2, total_profit))
+            summary.append((symbol, len(trades_df) // 2, total_profit))
 
         except Exception as e:
             logger.warning(f"Ошибка backtest для {symbol}: {e}")
 
     # Сохраняем сводку
-    summary_df = pd.DataFrame(summary, columns=['Symbol', 'Trades', 'TotalProfit(%)'])
+    summary_df = pd.DataFrame(
+        summary,
+        columns=[
+            'Symbol',
+            'Trades',
+            'TotalProfit(%)'])
     summary_file = os.path.join(results_dir, "summary.csv")
     summary_df.to_csv(summary_file, index=False)
 
     logger.info(f"Backtest завершён. Результаты в {results_dir}")
+

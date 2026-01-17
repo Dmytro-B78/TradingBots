@@ -1,4 +1,5 @@
 ﻿import pandas as pd
+
 from bot_ai.core.config import load_config
 from bot_ai.exec.executor import TradeExecutor
 
@@ -10,19 +11,83 @@ def calc_risk_usdt(entry_price, sl_price, position_size):
     return round(qty * stop_distance, 2)
 
 def run_trade(executor, symbol, entry_price, sl_price):
-    trade = executor.execute_trade(symbol=symbol, side="long", price=entry_price, ohlcv_df=ohlcv_df)
+    trade = executor.execute_trade(
+        symbol=symbol,
+        side="long",
+        price=entry_price,
+        ohlcv_df=ohlcv_df)
     trade["SL"] = sl_price
-    trade["PositionSize"] = executor._calculate_position_size(entry_price, sl_price)
+    trade["PositionSize"] = executor._calculate_position_size(
+        entry_price, sl_price)
     risk = calc_risk_usdt(entry_price, sl_price, trade["PositionSize"])
     print(trade)
     print(f"Риск в $: {risk}")
 
 # Фейковые OHLCV-данные
 data = {
-    "high": [105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124],
-    "low":  [95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114],
-    "close":[100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119]
-}
+    "high": [
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124],
+    "low": [
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114],
+    "close": [
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119]}
 ohlcv_df = pd.DataFrame(data)
 
 def main():
@@ -43,3 +108,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

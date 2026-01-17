@@ -2,8 +2,8 @@
 # Проверка логирования отказов и успешных сделок RiskGuard
 
 import csv
-from bot_ai.risk.risk_guard import RiskGuard, TradeContext
 
+from bot_ai.risk.risk_guard import RiskGuard, TradeContext
 
 def make_ctx(**kwargs):
     defaults = dict(
@@ -18,12 +18,11 @@ def make_ctx(**kwargs):
     defaults.update(kwargs)
     return TradeContext(**defaults)
 
-
 def test_risk_guard_logs_denials_and_passes(tmp_path):
     deny_file = tmp_path / "risk_log.csv"
     pass_file = tmp_path / "risk_pass_log.csv"
 
-    # Конфиг: max_positions=0 → всегда отказ
+    # Конфиг: max_positions=0 > всегда отказ
     cfg = {"risk": {"max_positions": 0}}
     rg = RiskGuard(cfg, risk_log_file=deny_file, risk_pass_log_file=pass_file)
 
@@ -48,3 +47,4 @@ def test_risk_guard_logs_denials_and_passes(tmp_path):
     rows = list(csv.reader(pass_file.open(encoding="utf-8")))
     assert rows[0] == ["timestamp", "message"]
     assert "Сделка разрешена" in rows[1][1]
+

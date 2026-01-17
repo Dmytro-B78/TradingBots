@@ -8,7 +8,8 @@ def dict_to_namespace(d):
     для доступа к полям через точку.
     """
     if isinstance(d, dict):
-        return SimpleNamespace(**{k: dict_to_namespace(v) for k, v in d.items()})
+        return SimpleNamespace(**{k: dict_to_namespace(v)
+                               for k, v in d.items()})
     elif isinstance(d, list):
         return [dict_to_namespace(i) for i in d]
     else:
@@ -62,3 +63,4 @@ def load_config(path='config.json'):
                     data[section][key] = val
 
     return dict_to_namespace(data)
+

@@ -1,12 +1,14 @@
-﻿import pandas as pd
-import logging
+﻿import logging
+
+import pandas as pd
 
 class DynamicSLTP:
     def __init__(self, cfg):
         self.cfg = cfg
         self.logger = logging.getLogger(__name__)
 
-        # Читаем параметры из risk, при отсутствии — из sl_tp, при отсутствии — дефолт
+        # Читаем параметры из risk, при отсутствии — из sl_tp, при отсутствии —
+        # дефолт
         self.sl_mult = getattr(cfg.risk, "sl_atr_multiplier",
                                getattr(cfg.sl_tp, "sl_value", 2.0))
         self.tp_mult = getattr(cfg.risk, "tp_atr_multiplier",
@@ -36,7 +38,8 @@ class DynamicSLTP:
         Возвращает (SL, TP) для сделки на основе ATR.
         """
         if ohlcv_df is None or ohlcv_df.empty:
-            self.logger.warning("DynamicSLTP: нет данных OHLCV для расчёта SL/TP.")
+            self.logger.warning(
+                "DynamicSLTP: нет данных OHLCV для расчёта SL/TP.")
             return None, None
 
         atr_value = self._calculate_atr(ohlcv_df)
@@ -48,7 +51,8 @@ class DynamicSLTP:
         side = trade_data.get("Side", "").lower()
 
         if not entry_price:
-            self.logger.warning("DynamicSLTP: нет цены входа для расчёта SL/TP.")
+            self.logger.warning(
+                "DynamicSLTP: нет цены входа для расчёта SL/TP.")
             return None, None
 
         if side == "buy":
@@ -58,8 +62,10 @@ class DynamicSLTP:
             sl = round(entry_price + atr_value * self.sl_mult, 6)
             tp = round(entry_price - atr_value * self.tp_mult, 6)
         else:
-            self.logger.warning(f"DynamicSLTP: неизвестная сторона сделки {side}")
+            self.logger.warning(
+                f"DynamicSLTP: неизвестная сторона сделки {side}")
             return None, None
 
         self.logger.info(f"DynamicSLTP: ATR={atr_value:.6f}, SL={sl}, TP={tp}")
         return sl, tp
+

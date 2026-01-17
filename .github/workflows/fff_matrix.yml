@@ -1,0 +1,172 @@
+name: FFF Matrix Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test-matrix:
+    runs-on: windows-latest
+
+    steps:
+      # 1. Чекаут кода
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Установка Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # 3. Установка зависимостей
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 4. Запуск полного цикла
+      - name: Run FFF Matrix tests and build report
+        shell: pwsh
+        run: |
+          .\scripts\fix_pytest_ini.ps1
+
+      # 5. Публикация CSV и полного лога как артефактов
+      - name: Upload FFF Matrix summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: fff_matrix_summary
+          path: logs/fff_matrix_summary.csv
+
+      - name: Upload full log
+        uses: actions/upload-artifact@v4
+        with:
+          name: fff_matrix_full_log
+          path: logs/fff_matrix_full.log
+
+      # 6. Рендер CSV в Markdown с подсветкой, статистикой и ссылками на HTML-отчёт
+      - name: Render CSV to Markdown
+        id: render
+        shell: pwsh
+        run: |
+          $csvPath = "logs/fff_matrix_summary.csv"
+          $logPath = "logs/fff_matrix_full.log"
+          if (-not (Test-Path $csvPath)) { Write-Host "CSV not found"; exit 1 }
+          if (-not (Test-Path $logPath)) { Write-Host "Log not found"; exit 1 }
+
+          $repoPagesUrl = "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/index.html"
+
+          $rows = Import-Csv $csvPath
+          $logLines = Get-Content $logPath
+          $md = "| Scenario | ExpectedPass | Result | Spread | Trend_1d | Trend_1h |\n"
+          $md += "|----------|--------------|--------|--------|----------|----------|\n"
+          $mismatches = @()
+
+          foreach ($row in $rows) {
+              $scenario = $row.Scenario
+              $expected = $row.ExpectedPass
+              $result = $row.Result
+              $spread = $row.Spread
+              $trend1d = $row.Trend_1d
+              $trend1h = $row.Trend_1h
+
+              if ($expected -ne $result -and $result -ne "Неопределённо" -and $scenario -ne "Summary") {
+                  $lineIndex = ($logLines | Select-String -Pattern "\[CASE\].*$scenario").LineNumber
+                  $md += "| <span style='color:red'>**$scenario**</span> | $expected | $result | $spread | $trend1d | $trend1h |\n"
+                  $mismatches += [pscustomobject]@{ Scenario=$scenario; Line=$lineIndex }
+              } else {
+                  $md += "| $scenario | $expected | $result | $spread | $trend1d | $trend1h |\n"
+              }
+          }
+
+          # Сводная статистика
+          $summaryRow = $rows | Where-Object { $_.Scenario -eq "Summary" }
+          if ($summaryRow) {
+              $stats = "**Passed:** $($summaryRow.PassedCount) ($($summaryRow.PassedPct))  \n" +
+                       "**Failed:** $($summaryRow.FailedCount) ($($summaryRow.FailedPct))  \n" +
+                       "**Undefined:** $($summaryRow.UndefinedCount) ($($summaryRow.UndefinedPct))"
+              $md += "\n\n### 📊 Summary Stats\n$stats\n"
+          }
+
+          # Блок проблемных сценариев с прямыми ссылками на HTML-отчёт
+          if ($mismatches.Count -gt 0) {
+              $md += "\n\n### ❌ Problem Scenarios\n"
+              foreach ($m in $mismatches) {
+                  $md += "- [$($m.Scenario)]($repoPagesUrl#line$($m.Line))\n"
+              }
+          }
+
+          echo "markdown<<EOF" >> $env:GITHUB_OUTPUT
+          echo "$md" >> $env:GITHUB_OUTPUT
+          echo "EOF" >> $env:GITHUB_OUTPUT
+
+          if ($mismatches.Count -gt 0) {
+              Write-Host "❌ Найдены расхождения в сценариях:" -ForegroundColor Red
+              $mismatches | ForEach-Object { Write-Host " - $($_.Scenario) (строка $($_.Line))" -ForegroundColor Red }
+              exit 1
+          }
+
+      # 7. Генерация HTML-отчёта для GitHub Pages
+      - name: Generate HTML report
+        shell: pwsh
+        run: |
+          $logPath = "logs/fff_matrix_full.log"
+          $htmlPath = "report/index.html"
+          if (-not (Test-Path $logPath)) { Write-Host "Log not found"; exit 1 }
+
+          $lines = Get-Content $logPath
+          $html = @()
+          $html += "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>FFF Matrix Log</title>"
+          $html += "<style>
+            body{font-family:monospace;background:#111;color:#eee;}
+            .case{color:#0ff;}
+            .fff{color:#ff0;}
+            .linenum{color:#555;}
+            a{color:#0ff;}
+          </style>"
+          $html += "</head><body><h1>FFF Matrix Full Log</h1><pre>"
+
+          $lineNum = 1
+          foreach ($line in $lines) {
+              $safe = [System.Web.HttpUtility]::HtmlEncode($line)
+              if ($safe -match "\[CASE\]") { $safe = "<span class='case' id='line$lineNum'>$safe</span>" }
+              if ($safe -match "\[FFF\]") { $safe = "<span class='fff'>$safe</span>" }
+              $html += ("<span class='linenum'>{0:D4}:</span> {1}" -f $lineNum, $safe)
+              $lineNum++
+          }
+
+          $html += "</pre></body></html>"
+
+          if (-not (Test-Path "report")) { New-Item -ItemType Directory -Path "report" | Out-Null }
+          $html -join "`n" | Set-Content -Path $htmlPath -Encoding UTF8
+
+      # 8. Публикация HTML на GitHub Pages
+      - name: Deploy report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./report
+
+      # 9. Поиск существующего комментария
+      - name: Find existing comment
+        if: github.event_name == 'pull_request'
+        id: find-comment
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '## 🧪 FFF Matrix Summary'
+
+      # 10. Комментарий в PR (автообновление)
+      - name: Create or update PR comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## 🧪 FFF Matrix Summary
+            ${{ steps.render.outputs.markdown }}
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          edit-mode: replace

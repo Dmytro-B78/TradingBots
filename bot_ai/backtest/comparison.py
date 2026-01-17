@@ -1,7 +1,8 @@
-﻿import os
-import pandas as pd
-import logging
+﻿import logging
+import os
 from datetime import datetime, timedelta
+
+import pandas as pd
 
 def compare_strategies(backtests_dir='data/backtests', days=7):
     logger = logging.getLogger(__name__)
@@ -19,8 +20,8 @@ def compare_strategies(backtests_dir='data/backtests', days=7):
                 try:
                     folder_time_str = os.path.basename(root).split('_')[-1]
                     # Пытаемся распарсить дату из имени папки
-                    folder_datetime = datetime.strptime(folder_time_str, "%Y%m%d") \
-                        if len(folder_time_str) == 8 else None
+                    folder_datetime = datetime.strptime(
+                        folder_time_str, "%Y%m%d") if len(folder_time_str) == 8 else None
                 except Exception:
                     folder_datetime = None
 
@@ -38,11 +39,14 @@ def compare_strategies(backtests_dir='data/backtests', days=7):
     all_results = pd.concat(summaries, ignore_index=True)
 
     # Средняя прибыль по стратегиям за период
-    avg_profit = all_results.groupby('Strategy')['TotalProfit(%)'].mean().reset_index()
+    avg_profit = all_results.groupby(
+        'Strategy')['TotalProfit(%)'].mean().reset_index()
 
     # Лучшая и худшая пара по каждой стратегии
-    best_pairs = all_results.loc[all_results.groupby('Strategy')['TotalProfit(%)'].idxmax()]
-    worst_pairs = all_results.loc[all_results.groupby('Strategy')['TotalProfit(%)'].idxmin()]
+    best_pairs = all_results.loc[all_results.groupby(
+        'Strategy')['TotalProfit(%)'].idxmax()]
+    worst_pairs = all_results.loc[all_results.groupby(
+        'Strategy')['TotalProfit(%)'].idxmin()]
 
     logger.info(f"=== Средняя прибыль по стратегиям за {days} дней ===")
     for _, row in avg_profit.iterrows():
@@ -50,14 +54,17 @@ def compare_strategies(backtests_dir='data/backtests', days=7):
 
     logger.info("=== Лучшая пара по стратегиям ===")
     for _, row in best_pairs.iterrows():
-        logger.info(f"{row['Strategy']}: {row['Symbol']} ({row['TotalProfit(%)']:.2f}%)")
+        logger.info(
+            f"{row['Strategy']}: {row['Symbol']} ({row['TotalProfit(%)']:.2f}%)")
 
     logger.info("=== Худшая пара по стратегиям ===")
     for _, row in worst_pairs.iterrows():
-        logger.info(f"{row['Strategy']}: {row['Symbol']} ({row['TotalProfit(%)']:.2f}%)")
+        logger.info(
+            f"{row['Strategy']}: {row['Symbol']} ({row['TotalProfit(%)']:.2f}%)")
 
     # Сохраняем полный отчёт
     ts = datetime.utcnow().strftime("%Y%m%d_%H%M")
     comparison_file = os.path.join(backtests_dir, f"comparison_{ts}.csv")
     all_results.to_csv(comparison_file, index=False)
     logger.info(f"Сравнительный отчёт сохранён в {comparison_file}")
+

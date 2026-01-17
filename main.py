@@ -1,119 +1,122 @@
-﻿import logging
-import time
+﻿import argparse
+import json
+import logging
 import os
-from datetime import datetime
 
-import ccxt
 import pandas as pd
 
-from bot_ai.core.config import load_config
-from bot_ai.backtest.backtest_engine import run_backtest
-from bot_ai.strategy.sma_for_backtest import sma_strategy
-from bot_ai.strategy.rsi_for_backtest import rsi_strategy
-from bot_ai.selector.pipeline import select_pairs
-from bot_ai.exec.executor import TradeExecutor
-from bot_ai.risk.guard import RiskGuard
-from bot_ai.utils.notifier import Notifier  # ← добавили
+from strategies.breakout import BreakoutStrategy
+from strategies.countertrend import CounterTrendStrategy
+from strategies.mean_reversion import MeanReversionStrategy
+from strategies.mock_data import generate_mock_data
+from strategies.rsi import RSIStrategy
+from strategies.sl_tp import SLTPStrategy
+from strategies.sma import SMAStrategy
 
-# === Инициализация ===
-cfg = load_config("config.json")
-
+os.makedirs("logs", exist_ok=True)
 logging.basicConfig(
+    filename="logs/main.log",
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s"
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    encoding="utf-8"
 )
+logger = logging.getLogger("MAIN")
 
-# === Инициализация RiskGuard и Notifier ===
-risk_guard = RiskGuard(cfg)
-notifier = Notifier(cfg)  # ← создаём экземпляр уведомителя
+def load_config(path):
+    try:
+        with open(path, "r", encoding="utf-8-sig") as f:
+            cfg = json.load(f)
+            logger.info(f"[MAIN] ? Загружен config: {path}")
+            return cfg
+    except Exception as e:
+        logger.error(f"[MAIN] ? Ошибка загрузки config: {e}")
+        return None
 
-# === Отбор пар ===
-logging.info("Запуск отбора пар через селектор...")
-pairs = select_pairs(cfg, risk_guard=risk_guard)
+def load_best_config(csv_path):
+    if not os.path.exists(csv_path):
+        logger.error(f"[MAIN] ? Файл не найден: {csv_path}")
+        return None
+    try:
+        df = pd.read_csv(csv_path)
+        if df.empty:
+            logger.error("[MAIN] ? opt_results.csv пуст")
+            return None
+        best = df.iloc[0].to_dict()
+        logger.info(f"[MAIN] ? Загружены лучшие параметры: {best}")
+        return best
+    except Exception as e:
+        logger.error(f"[MAIN] ? Ошибка чтения opt_results.csv: {e}")
+        return None
 
-if not pairs:
-    logging.warning("Селектор не вернул ни одной пары.")
-else:
-    logging.info(f"Отобрано {len(pairs)} пар: {pairs}")
+def run_strategy(name, cfg, pair, force_optimize=False):
+    strategy_map = {
+        "mean_reversion": MeanReversionStrategy,
+        "breakout": BreakoutStrategy,
+        "sma": SMAStrategy,
+        "rsi": RSIStrategy,
+        "countertrend": CounterTrendStrategy,
+        "sl_tp": SLTPStrategy
+    }
 
-    # === Backtest ===
-    if getattr(cfg, "enable_backtest", False):
-        logging.info("=== Запуск backtest для SMA ===")
-        run_backtest(cfg, pairs, sma_strategy, "SMA", days=30, timeframes=["1h", "4h", "1d"])
-        logging.info("=== Запуск backtest для RSI ===")
-        run_backtest(cfg, pairs, rsi_strategy, "RSI", days=30, timeframes=["1h", "4h", "1d"])
-        logging.info("=== Все тесты завершены ===")
+    if name not in strategy_map:
+        logger.error(f"[MAIN] ? Неизвестная стратегия: {name}")
+        return
 
-    # === Live / Dry-run ===
-    if getattr(cfg, "mode", "dry-run") in ["live", "dry-run"]:
-        mode = cfg.mode
-        logging.info(f"=== Запуск торгового режима: {mode} ===")
+    if force_optimize:
+        logger.info("[MAIN] ?? Запуск автооптимизации...")
+        os.system("python optimize_parameters.py")
+        cfg = load_best_config("results/opt_results.csv")
+        if cfg is None:
+            logger.error(
+                "[MAIN] ? Не удалось загрузить параметры после оптимизации")
+            return
+        logger.info(
+            "[MAIN] ? Запуск стратегии с оптимизированными параметрами")
 
-        executor = TradeExecutor(cfg, risk_guard=risk_guard, notifier=notifier)  # ← передаём notifier
-        exchange = getattr(ccxt, cfg.exchange)({'enableRateLimit': True})
+    if cfg is None:
+        logger.error("[MAIN] ? Конфигурация не загружена — прерывание")
+        return
 
-        trade_loop_interval = getattr(cfg, "trade_loop_interval_sec", 60)
-        ohlcv_limit = getattr(cfg, "live_ohlcv_limit", 100)
-        timeframe = getattr(cfg, "live_timeframe", "1h")
+    logger.info(f"[MAIN] ? Стратегия: {name} | Пара: {pair}")
+    try:
+        strategy = strategy_map[name](cfg)
+        df = generate_mock_data(pair, periods=200)
 
-        strategies = [
-            (sma_strategy, "SMA"),
-            (rsi_strategy, "RSI"),
-        ]
+        if hasattr(strategy, "run"):
+            trades = strategy.run(pair, df)
+            logger.info(f"[MAIN] ? Сигналов: {len(trades)}")
+            os.makedirs("results", exist_ok=True)
+            pd.DataFrame(trades).to_csv(
+                f"results/{name}_trades.csv", index=False)
+        else:
+            df = strategy.calculate_indicators(df)
+            df = strategy.generate_signals(df)
+            df = strategy.backtest(df)
+            strategy.summary(pair)
 
-        while True:
-            logging.info("=== Новый цикл торговли ===")
+        logger.info("[MAIN] ? Стратегия завершена успешно")
+    except Exception as e:
+        logger.exception(f"[MAIN] ? Ошибка выполнения стратегии: {e}")
 
-            # --- Проверка SL/TP для открытых позиций ---
-            for symbol, pos in list(executor.positions.items()):
-                try:
-                    last_price = exchange.fetch_ticker(symbol)["last"]
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--pair", type=str, default="BTC/USDT")
+    parser.add_argument("--strategy", type=str, default="mean_reversion")
+    parser.add_argument("--config", type=str, default="config.json")
+    parser.add_argument("--force-optimize", action="store_true")
+    args = parser.parse_args()
 
-                    # LONG
-                    if pos["side"] == "buy":
-                        if pos["sl"] and last_price <= pos["sl"]:
-                            logging.info(f"SL сработал для {symbol} (LONG) @ {last_price}")
-                            executor.execute_trade(symbol, "sell", last_price, None)
-                        elif pos["tp"] and last_price >= pos["tp"]:
-                            logging.info(f"TP сработал для {symbol} (LONG) @ {last_price}")
-                            executor.execute_trade(symbol, "sell", last_price, None)
+    strat_name = args.strategy
+    pair = args.pair
 
-                    # SHORT
-                    elif pos["side"] == "sell":
-                        if pos["sl"] and last_price >= pos["sl"]:
-                            logging.info(f"SL сработал для {symbol} (SHORT) @ {last_price}")
-                            executor.execute_trade(symbol, "buy", last_price, None)
-                        elif pos["tp"] and last_price <= pos["tp"]:
-                            logging.info(f"TP сработал для {symbol} (SHORT) @ {last_price}")
-                            executor.execute_trade(symbol, "buy", last_price, None)
+    if args.force_optimize:
+        strat_cfg = None
+    else:
+        strat_cfg = load_config(args.config)
 
-                except Exception as e:
-                    logging.error(f"Ошибка при проверке SL/TP для {symbol}: {e}")
+    run_strategy(
+        strat_name,
+        strat_cfg,
+        pair,
+        force_optimize=args.force_optimize)
 
-            # --- Обновляем список пар с учётом cooldown ---
-            pairs = select_pairs(cfg, risk_guard=risk_guard)
-
-            # --- Обработка сигналов стратегий ---
-            for strategy_func, strategy_name in strategies:
-                for symbol in pairs:
-                    try:
-                        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=ohlcv_limit)
-                        if not ohlcv:
-                            continue
-                        df = pd.DataFrame(ohlcv, columns=["time", "open", "high", "low", "close", "volume"])
-                        signal = strategy_func(df, live_mode=True)
-                        if signal not in ["buy", "sell"]:
-                            continue
-                        last_price = float(df["close"].iloc[-1])
-                        logging.info(f"Сигнал {signal.upper()} от {strategy_name} для {symbol} @ {last_price}")
-                        executor.execute_trade(
-                            symbol=symbol,
-                            side=signal,
-                            price=last_price,
-                            ohlcv_df=df
-                        )
-                    except Exception as e:
-                        logging.error(f"Ошибка при обработке {symbol} стратегией {strategy_name}: {e}")
-
-            logging.info(f"Ожидание {trade_loop_interval} сек...")
-            time.sleep(trade_loop_interval)
