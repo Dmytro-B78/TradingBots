@@ -1,6 +1,17 @@
+<<<<<<< HEAD
 ﻿import csv
 import subprocess
 import sys
+=======
+<<<<<<< Updated upstream
+﻿# tests/test_risk_report.py
+# Проверка работы RiskReport: подсчёт сделок, отказов и причин
+=======
+﻿import csv
+import subprocess
+import sys
+>>>>>>> Stashed changes
+>>>>>>> 47a38855 (🔥 Финальный merge: stage0.4_main_release → main, конфликты решены)
 
 def test_risk_report_all_branches(tmp_path):
     """
@@ -62,3 +73,41 @@ def test_risk_report_all_branches(tmp_path):
         [sys.executable, "-m", "bot_ai.risk.report"], capture_output=True, text=True)
     assert "RiskGuard Report" in result.stdout
 
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+    assert summary["total_trades"] == 5
+    assert summary["total_passes"] == 2
+    assert summary["total_denies"] == 3
+    assert summary["success_rate_pct"] == 40.0
+    assert summary["denies_by_reason"]["Объём слишком мал"] == 2
+    assert summary["denies_by_reason"]["Кулдаун"] == 1
+=======
+    # 3. _read_csv: файла нет
+    missing = rr._read_csv(tmp_path / "missing.csv")
+    assert missing == []
+
+    # 4. generate_summary: сделки есть
+    summary = rr.generate_summary()
+    assert summary["total_trades"] == 2
+    assert summary["denies_by_reason"] == {"low_volume": 1}
+
+    # 5. generate_summary: сделок нет
+    rr_empty = RiskReport(
+        deny_file=str(
+            tmp_path /
+            "no.csv"),
+        pass_file=str(
+            tmp_path /
+            "no2.csv"))
+    summary_empty = rr_empty.generate_summary()
+    assert summary_empty["total_trades"] == 0
+    assert summary_empty["success_rate_pct"] == 0
+
+    # 6. Модульный код __main__
+    result = subprocess.run(
+        [sys.executable, "-m", "bot_ai.risk.report"], capture_output=True, text=True)
+    assert "RiskGuard Report" in result.stdout
+
+>>>>>>> Stashed changes
+>>>>>>> 47a38855 (🔥 Финальный merge: stage0.4_main_release → main, конфликты решены)

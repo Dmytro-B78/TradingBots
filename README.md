@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+# TradingBots
+=======
+>>>>>>> 47a38855 (🔥 Финальный merge: stage0.4_main_release → main, конфликты решены)
 ﻿# 🤖 TradingBots
 
 AI‑адаптивный торговый бот с прозрачной архитектурой, строгим контролем рисков и системой уведомлений.
@@ -139,3 +145,7 @@ pytest -v
 **Версия:** `0.4`  
 **Этап:** `stage0.5_strategies_integration`  
 **Дата:** _январь 2026_
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
+>>>>>>> 47a38855 (🔥 Финальный merge: stage0.4_main_release → main, конфликты решены)

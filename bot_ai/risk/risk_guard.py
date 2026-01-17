@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+﻿from dataclasses import dataclass
+from .guard import RiskGuard
+=======
+>>>>>>> 47a38855 (🔥 Финальный merge: stage0.4_main_release → main, конфликты решены)
 ﻿# ============================================
 # File: bot_ai/risk/risk_guard.py
 # Назначение: контроль рисков и блокировка сделок
@@ -9,8 +16,23 @@ import os
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+<<<<<<< HEAD
 
 class TradeContext:
+=======
+>>>>>>> Stashed changes
+
+class TradeContext:
+<<<<<<< Updated upstream
+    symbol: str
+    side: str
+    price: float
+    equity_usdt: float
+    daily_pnl_usdt: float
+    spread_pct: float
+    vol24h_usdt: float
+=======
+>>>>>>> 47a38855 (🔥 Финальный merge: stage0.4_main_release → main, конфликты решены)
     def __init__(self, symbol, side, price, equity_usdt,
                  daily_pnl_usdt=0, spread_pct=0, vol24h_usdt=0):
         self.symbol = symbol
@@ -96,3 +118,7 @@ class RiskGuardWithLogging(RiskGuard):
                     [ctx.symbol, ctx.side, ctx.price, ctx.equity_usdt, reason])
         return result
 
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
+>>>>>>> 47a38855 (🔥 Финальный merge: stage0.4_main_release → main, конфликты решены)

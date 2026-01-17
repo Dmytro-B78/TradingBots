@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+=======
+>>>>>>> 47a38855 (🔥 Финальный merge: stage0.4_main_release → main, конфликты решены)
 ﻿# ============================================
 # File: bot_ai/selector/filters.py
 # Назначение: Расширенные фильтры для отбора пар
@@ -72,3 +77,7 @@ def trend_ok(exchange, symbol, tf, fast, slow, skip=False):
     except Exception:
         return False
 
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
+>>>>>>> 47a38855 (🔥 Финальный merge: stage0.4_main_release → main, конфликты решены)
