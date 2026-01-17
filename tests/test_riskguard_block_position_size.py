@@ -1,5 +1,4 @@
-﻿import csv
-from pathlib import Path
+﻿
 from bot_ai.risk.risk_guard import RiskGuardWithLogging, TradeContext
 
 def test_position_size_block(tmp_path, monkeypatch):
@@ -7,7 +6,8 @@ def test_position_size_block(tmp_path, monkeypatch):
     logs_dir.mkdir()
     monkeypatch.chdir(tmp_path)
 
-    guard = RiskGuardWithLogging(config={"risk": {"max_position_size_pct": 50}})
+    guard = RiskGuardWithLogging(
+        config={"risk": {"max_position_size_pct": 50}})
     ctx = TradeContext(
         symbol="ADAUSDT", side="buy", price=2000,
         equity_usdt=1000, daily_pnl_usdt=0,
@@ -19,3 +19,4 @@ def test_position_size_block(tmp_path, monkeypatch):
 
     risk_blocks = logs_dir / "risk_blocks.csv"
     assert risk_blocks.exists()
+

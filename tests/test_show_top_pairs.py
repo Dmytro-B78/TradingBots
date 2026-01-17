@@ -1,5 +1,4 @@
 ﻿import logging
-import pytest
 
 def test_show_top_pairs_all_branches(monkeypatch, caplog):
     """
@@ -23,6 +22,7 @@ def test_show_top_pairs_all_branches(monkeypatch, caplog):
     # Мокаем ccxt.binance
     class DummyExchange:
         def __init__(self, *a, **k): pass
+
         def fetch_ticker(self, symbol):
             if symbol == "BAD/USDT":
                 raise Exception("fail")
@@ -40,3 +40,4 @@ def test_show_top_pairs_all_branches(monkeypatch, caplog):
     assert "BBB/USDT" in msgs
     assert "BAD/USDT" not in msgs
     assert any("Топ-2 пар" in m for m in caplog.messages)
+

@@ -1,71 +1,42 @@
-﻿import logging
+﻿# ============================================
+# File: notifier.py
+# Purpose: Отправка уведомлений (Telegram)
+# ============================================
+
 import requests
-from types import SimpleNamespace
+import logging
 
 class Notifier:
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.logger = logging.getLogger(__name__)
+    def __init__(self, config):
+        self.enabled = config.notifications.get("enabled", False)
+        self.provider = config.notifications.get("provider", "telegram")
+        self.token = config.notifications.get("telegram_token")
+        self.chat_id = config.notifications.get("telegram_chat_id")
 
-        notifications_cfg = getattr(cfg, "notifications", None)
-
-        if isinstance(notifications_cfg, SimpleNamespace):
-            self.enabled = getattr(notifications_cfg, "enabled", False)
-            self.provider = getattr(notifications_cfg, "provider", "telegram")
-            self.token = getattr(notifications_cfg, "telegram_token", "")
-            self.chat_id = getattr(notifications_cfg, "telegram_chat_id", "")
-        elif isinstance(notifications_cfg, dict):
-            self.enabled = notifications_cfg.get("enabled", False)
-            self.provider = notifications_cfg.get("provider", "telegram")
-            self.token = notifications_cfg.get("telegram_token", "")
-            self.chat_id = notifications_cfg.get("telegram_chat_id", "")
-        else:
-            self.enabled = False
-            self.provider = "telegram"
-            self.token = ""
-            self.chat_id = ""
-
-    def send(self, message: str):
+    def alert(self, message):
         if not self.enabled:
             return
 
-        if self.provider == "telegram" and self.token and self.chat_id:
-            url = f"https://api.telegram.org/bot{self.token}/sendMessage"
-            payload = {
-                "chat_id": self.chat_id,
-                "text": message,
-                "parse_mode": "HTML"
-            }
-            try:
-                resp = requests.post(url, data=payload, timeout=5)
-                if resp.status_code != 200:
-                    self.logger.error(f"Ошибка отправки в Telegram: {resp.text}")
-            except Exception as e:
-                self.logger.error(f"Ошибка при отправке уведомления: {e}")
+        if self.provider == "telegram":
+            self._send_telegram(message)
         else:
-            self.logger.info(f"[NOTIFY] {message}")
+            logging.warning(f"[Notifier] Провайдер '{self.provider}' не поддерживается")
 
-    def trade_open(self, trade_data: dict):
-        msg = (
-            f"📈 <b>Открыта позиция</b>\n"
-            f"Символ: {trade_data.get('Symbol')}\n"
-            f"Сторона: {str(trade_data.get('Side')).upper()}\n"
-            f"Цена: {trade_data.get('Price')}\n"
-            f"Размер: {trade_data.get('PositionSize')}\n"
-            f"SL: {trade_data.get('SL')}\n"
-            f"TP: {trade_data.get('TP')}"
-        )
-        self.send(msg)
+    def _send_telegram(self, message):
+        if not self.token or not self.chat_id:
+            logging.warning("[Notifier] Не указан токен или chat_id для Telegram")
+            return
 
-    def trade_close(self, trade_data: dict):
-        msg = (
-            f"📉 <b>Закрыта позиция</b>\n"
-            f"Символ: {trade_data.get('Symbol')}\n"
-            f"Сторона: {str(trade_data.get('Side')).upper()}\n"
-            f"Цена: {trade_data.get('Price')}\n"
-            f"PnL: {trade_data.get('Profit(%)')}% ({trade_data.get('Profit(USDT)')} USDT)"
-        )
-        self.send(msg)
+        url = f"https://api.telegram.org/bot{self.token}/sendMessage"
+        payload = {
+            "chat_id": self.chat_id,
+            "text": message,
+            "parse_mode": "HTML"
+        }
 
-    def alert(self, text: str):
-        self.send(f"⚠️ <b>АЛЕРТ</b>\n{text}")
+        try:
+            response = requests.post(url, json=payload, timeout=10)
+            if response.status_code != 200:
+                logging.error(f"[Telegram] Ошибка отправки: {response.status_code} — {response.text}")
+        except Exception as e:
+            logging.error(f"[Telegram] Исключение при отправке: {e}")

@@ -1,10 +1,9 @@
 ﻿import csv
-from pathlib import Path
 
 def test_risk_report_empty_and_with_data(tmp_path):
     from bot_ai.risk.report import RiskReport
 
-    # 1. Оба файла отсутствуют → пустая статистика
+    # 1. Оба файла отсутствуют > пустая статистика
     rr_empty = RiskReport(
         deny_file=tmp_path / "no_deny.csv",
         pass_file=tmp_path / "no_pass.csv"
@@ -13,7 +12,7 @@ def test_risk_report_empty_and_with_data(tmp_path):
     assert summary_empty["total_trades"] == 0
     assert summary_empty["success_rate_pct"] == 0
 
-    # 2. Файлы существуют → считаем статистику
+    # 2. Файлы существуют > считаем статистику
     deny_file = tmp_path / "risk_log.csv"
     pass_file = tmp_path / "risk_pass_log.csv"
 
@@ -41,3 +40,4 @@ def test_risk_report_empty_and_with_data(tmp_path):
     assert summary_data["success_rate_pct"] == 40.0
     assert summary_data["denies_by_reason"]["Low volume"] == 2
     assert summary_data["denies_by_reason"]["High spread"] == 1
+

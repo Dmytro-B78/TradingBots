@@ -1,0 +1,67 @@
+﻿# -*- coding: utf-8 -*-
+# === bot_ai/analytics/generate_fake_trades.py ===
+# Генерация тестовых сделок для отладки equity_plot.py
+
+import csv
+import random
+from datetime import datetime, timedelta
+
+def generate_fake_trades(path="trades_log.csv", n=50, start_balance=1000):
+    now = datetime.utcnow()
+    trades = []
+
+    for i in range(n):
+        side = random.choice(["long", "short"])
+        entry = round(random.uniform(90, 110), 2)
+        direction = 1 if side == "long" else -1
+        random.uniform(0.5, 2.5)
+        sl = round(entry - direction * random.uniform(1, 3), 2)
+        tp1 = round(entry + direction * random.uniform(1, 3), 2)
+        tp2 = round(tp1 + direction * random.uniform(1, 3), 2)
+        qty = round(random.uniform(0.1, 1.0), 3)
+
+        # Выбираем случайный исход
+        outcome = random.choices(
+            ["TP1", "TP2", "SL"], weights=[0.3, 0.4, 0.3])[0]
+        if outcome == "TP1":
+            exit_price = tp1
+            reason = "TP1 (partial)"
+            qty_exited = round(qty * 0.5, 3)
+        elif outcome == "TP2":
+            exit_price = tp2
+            reason = "TP2"
+            qty_exited = qty
+        else:
+            exit_price = sl
+            reason = "SL"
+            qty_exited = qty
+
+        pnl_pct = ((exit_price - entry) / entry) * 100 * direction
+        pnl_usdt = round((pnl_pct / 100) * qty_exited * entry, 2)
+
+        trade = {
+            "symbol": "BTCUSDT",
+            "side": side,
+            "entry": entry,
+            "exit": exit_price,
+            "reason": reason,
+            "pnl_pct": round(pnl_pct, 2),
+            "pnl_usdt": pnl_usdt,
+            "qty": qty_exited,
+            "strategy": "adaptive",
+            "opened_at": (now + timedelta(minutes=i * 60)).isoformat(),
+            "closed_at": (now + timedelta(minutes=i * 60 + 30)).isoformat()
+        }
+        trades.append(trade)
+
+    # Сохраняем в CSV
+    with open(path, mode="w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=trades[0].keys())
+        writer.writeheader()
+        writer.writerows(trades)
+
+    print(f"Сгенерировано {n} тестовых сделок в {path}")
+
+if __name__ == "__main__":
+    generate_fake_trades()
+

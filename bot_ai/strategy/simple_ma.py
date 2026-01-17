@@ -1,8 +1,9 @@
-﻿import ccxt
-import logging
-import pandas as pd
+﻿import logging
 import os
 from datetime import datetime
+
+import ccxt
+import pandas as pd
 
 def run_strategy(cfg, pairs):
     logger = logging.getLogger(__name__)
@@ -23,7 +24,15 @@ def run_strategy(cfg, pairs):
         try:
             # Загружаем последние 100 свечей по 5 минут
             ohlcv = exchange.fetch_ohlcv(symbol, timeframe='5m', limit=100)
-            df = pd.DataFrame(ohlcv, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
+            df = pd.DataFrame(
+                ohlcv,
+                columns=[
+                    'time',
+                    'open',
+                    'high',
+                    'low',
+                    'close',
+                    'volume'])
 
             # Считаем SMA
             df['SMA5'] = df['close'].rolling(window=5).mean()
@@ -49,3 +58,4 @@ def run_strategy(cfg, pairs):
 
         except Exception as e:
             logger.warning(f"Ошибка стратегии для {symbol}: {e}")
+

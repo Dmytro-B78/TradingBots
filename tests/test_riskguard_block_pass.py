@@ -1,5 +1,6 @@
 ﻿import csv
 from pathlib import Path
+
 from bot_ai.risk.guard import RiskGuard
 
 class DummyCtx:
@@ -49,3 +50,4 @@ def test_pass_logging(tmp_path, monkeypatch):
 
     # Проверяем поля
     assert "Сделка разрешена" in last["message"]
+

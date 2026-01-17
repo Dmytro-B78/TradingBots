@@ -25,9 +25,12 @@ def sma_strategy(df, live_mode=False, short_window=10, long_window=30):
         position = 0
         for i in range(1, len(df)):
             if df['Signal'].iloc[i] == 1 and position <= 0:
-                trades.append({'Time': df['time'].iloc[i], 'Action': 'BUY', 'Price': df['close'].iloc[i]})
+                trades.append(
+                    {'Time': df['time'].iloc[i], 'Action': 'BUY', 'Price': df['close'].iloc[i]})
                 position = 1
             elif df['Signal'].iloc[i] == -1 and position >= 0:
-                trades.append({'Time': df['time'].iloc[i], 'Action': 'SELL', 'Price': df['close'].iloc[i]})
+                trades.append(
+                    {'Time': df['time'].iloc[i], 'Action': 'SELL', 'Price': df['close'].iloc[i]})
                 position = -1
         return pd.DataFrame(trades)
+

@@ -1,4 +1,5 @@
 ﻿import pytest
+
 from bot_ai.risk.sl_tp import DynamicSLTP
 
 @pytest.mark.parametrize("atr,volatility,min_stop,max_stop", [
@@ -15,3 +16,4 @@ def test_dynamic_sltp_bounds(atr, volatility, min_stop, max_stop):
     sl, tp = sltp.calculate(atr=atr, volatility=volatility)
     assert min_stop <= sl <= max_stop, f"SL {sl} вне допустимых границ"
     assert tp > 0, "TP должен быть положительным"
+

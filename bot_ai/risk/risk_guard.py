@@ -1,74 +1,98 @@
-﻿from dataclasses import dataclass
-from datetime import datetime, timezone
-import csv
-import os
-from .guard import RiskGuard
+﻿# ============================================
+# File: bot_ai/risk/risk_guard.py
+# Назначение: контроль рисков и блокировка сделок
+# ============================================
 
-@dataclass
+import csv
+import logging
+import os
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 class TradeContext:
-    """
-    Контекст сделки, передаваемый в RiskGuard.
-    """
-    symbol: str
-    side: str
-    price: float
-    equity_usdt: float
-    daily_pnl_usdt: float
-    spread_pct: float
-    vol24h_usdt: float
+    def __init__(self, symbol, side, price, equity_usdt,
+                 daily_pnl_usdt=0, spread_pct=0, vol24h_usdt=0):
+        self.symbol = symbol
+        self.side = side.lower() if isinstance(side, str) else "flat"
+        self.price = price
+        self.equity_usdt = equity_usdt
+        self.daily_pnl_usdt = daily_pnl_usdt
+        self.spread_pct = spread_pct
+        self.vol24h_usdt = vol24h_usdt
+
+class RiskGuard:
+    def __init__(self, cfg):
+        self.cfg = cfg
+
+    def check(self, ctx: TradeContext) -> (bool, str):
+        if ctx.side not in {"buy", "sell", "flat"}:
+            reason = f"Неизвестное значение side: '{ctx.side}'"
+            logger.warning(f"[RiskGuard] ОТКАЗ: {reason}")
+            return False, reason
+
+        if ctx.side == "flat":
+            reason = "Сторона сделки — flat (вне позиции), вход не требуется"
+            logger.info(f"[RiskGuard] ПРОПУСК: {reason}")
+            return False, reason
+
+        equity = ctx.equity_usdt
+        risk_cfg = self.cfg.get("risk", {})
+
+        risk_pct = risk_cfg.get("risk_per_trade_pct", 1.0)
+        max_usdt = risk_cfg.get("max_per_trade_usdt", equity)
+        max_pos_pct = risk_cfg.get("max_position_size_pct", 100)
+
+        risk_usdt = min(equity * (risk_pct / 100.0), max_usdt)
+        position_value_usdt = risk_usdt
+
+        if position_value_usdt > equity * (max_pos_pct / 100.0):
+            reason = f"Стоимость позиции {
+                position_value_usdt:.2f} > {max_pos_pct}% от equity {equity}"
+            logger.warning(f"[RiskGuard] ОТКАЗ: {reason}")
+            return False, reason
+
+        max_daily_loss = risk_cfg.get("daily_loss_limit_usdt", 0)
+        if max_daily_loss and ctx.daily_pnl_usdt < -max_daily_loss:
+            reason = f"Дневной убыток {
+                ctx.daily_pnl_usdt} < лимит {max_daily_loss}"
+            logger.warning(f"[RiskGuard] ОТКАЗ: {reason}")
+            return False, reason
+
+        max_spread = risk_cfg.get("max_spread_pct", 100)
+        if ctx.spread_pct > max_spread:
+            reason = f"Спред {ctx.spread_pct:.2f}% > {max_spread}%"
+            logger.warning(f"[RiskGuard] ОТКАЗ: {reason}")
+            return False, reason
+
+        min_vol = risk_cfg.get("min_24h_volume_usdt", 0)
+        if ctx.vol24h_usdt < min_vol:
+            reason = f"Объём {ctx.vol24h_usdt} < {min_vol}"
+            logger.warning(f"[RiskGuard] ОТКАЗ: {reason}")
+            return False, reason
+
+        return True, "OK"
 
 class RiskGuardWithLogging(RiskGuard):
     """
-    Расширенный RiskGuard с дополнительным CSV-логом причин блокировки сделки.
+    Расширение RiskGuard: пишет все отказы в risk_blocks.csv с конкретной причиной
     """
 
-    def __init__(self, config):
-        # Передаём пути к логам в базовый RiskGuard, чтобы они создавались в рабочей директории
-        super().__init__(
-            cfg=config,
-            risk_log_file="risk_log.csv",
-            risk_pass_log_file="risk_pass_log.csv"
-        )
-        self.ext_block_log_path = os.path.join("logs", "risk_blocks_ext.csv")
-        if not os.path.exists(self.ext_block_log_path):
-            os.makedirs(os.path.dirname(self.ext_block_log_path), exist_ok=True)
-            with open(self.ext_block_log_path, mode="w", newline="", encoding="utf-8") as f:
+    def __init__(self, cfg, log_file="risk_blocks.csv"):
+        super().__init__(cfg)
+        self.log_file = log_file
+        if not os.path.exists(self.log_file):
+            with open(self.log_file, "w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                writer.writerow([
-                    "timestamp", "symbol", "side", "price",
-                    "equity_usdt", "daily_pnl_usdt",
-                    "spread_pct", "vol24h_usdt", "reason"
-                ])
-
-    def log_block_reason_ext(self, ctx: TradeContext, reason: str):
-        """
-        Записывает причину блокировки сделки в расширенный risk_blocks_ext.csv.
-        """
-        with open(self.ext_block_log_path, mode="a", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
-            writer.writerow([
-                datetime.now(timezone.utc).isoformat(),
-                ctx.symbol,
-                ctx.side,
-                ctx.price,
-                ctx.equity_usdt,
-                ctx.daily_pnl_usdt,
-                ctx.spread_pct,
-                ctx.vol24h_usdt,
-                reason
-            ])
+                writer.writerow(
+                    ["symbol", "side", "price", "equity_usdt", "reason"])
 
     def check(self, ctx: TradeContext) -> bool:
-        """
-        Переопределённая проверка возможности сделки.
-        Если блокируем — пишем в расширенный CSV.
-        Разрешённые сделки логируются базовым классом в risk_log.csv.
-        """
-        allowed = super().check(ctx)
-        if allowed:
-            # Гарантируем, что risk_log.csv существует
-            if not self.risk_log_file.exists():
-                self._log_to_csv(self.risk_log_file, "Сделка разрешена")
-        else:
-            self.log_block_reason_ext(ctx, getattr(ctx, "reason", "unknown"))
-        return allowed
+        result, reason = super().check(ctx)
+        if not result:
+            with open(self.log_file, "a", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(
+                    [ctx.symbol, ctx.side, ctx.price, ctx.equity_usdt, reason])
+        return result
+

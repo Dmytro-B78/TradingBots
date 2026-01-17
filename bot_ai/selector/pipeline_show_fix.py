@@ -11,3 +11,4 @@
         except Exception:
             continue
     return False  # тест ожидает False во всех случаях
+

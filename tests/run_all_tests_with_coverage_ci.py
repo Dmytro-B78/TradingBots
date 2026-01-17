@@ -26,7 +26,8 @@ def main():
     if result.returncode != 0:
         sys.exit(result.returncode)
 
-    print("✅ CI coverage отчёты сохранены в coverage_reports (JSON + CSV)")
+    print("? CI coverage отчёты сохранены в coverage_reports (JSON + CSV)")
 
 if __name__ == "__main__":
     main()
+

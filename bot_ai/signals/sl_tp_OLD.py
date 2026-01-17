@@ -1,4 +1,4 @@
-﻿import math
+﻿
 
 def calculate_sl_tp(entry_price: float, side: str, cfg, atr_value: float):
     '''
@@ -42,3 +42,4 @@ def calculate_sl_tp(entry_price: float, side: str, cfg, atr_value: float):
         "sl_distance": round(sl_distance, 2),
         "tp_distance": round(tp_distance, 2)
     }
+

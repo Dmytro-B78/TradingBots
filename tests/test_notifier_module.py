@@ -1,5 +1,4 @@
 ﻿import logging
-import pytest
 from types import SimpleNamespace
 
 def test_notifier_all_branches(monkeypatch, caplog):
@@ -14,22 +13,29 @@ def test_notifier_all_branches(monkeypatch, caplog):
 
     caplog.set_level(logging.INFO)
 
-    # 1. enabled=False → send ничего не делает
-    cfg_disabled = SimpleNamespace(notifications=SimpleNamespace(enabled=False))
+    # 1. enabled=False > send ничего не делает
+    cfg_disabled = SimpleNamespace(
+        notifications=SimpleNamespace(
+            enabled=False))
     n_disabled = Notifier(cfg_disabled)
     assert n_disabled.enabled is False
     n_disabled.send("msg")  # ничего не логируется
 
     # 2. enabled=True, provider=telegram, успешный POST
-    cfg_enabled = SimpleNamespace(notifications=SimpleNamespace(
-        enabled=True, provider="telegram", telegram_token="token", telegram_chat_id="chat"
-    ))
+    cfg_enabled = SimpleNamespace(
+        notifications=SimpleNamespace(
+            enabled=True,
+            provider="telegram",
+            telegram_token="token",
+            telegram_chat_id="chat"))
     n_enabled = Notifier(cfg_enabled)
-    monkeypatch.setattr("bot_ai.utils.notifier.requests.post", lambda *a, **k: type("Resp", (), {"status_code": 200})())
+    monkeypatch.setattr("bot_ai.utils.notifier.requests.post",
+                        lambda *a, **k: type("Resp", (), {"status_code": 200})())
     n_enabled.send("test message")
 
-    # 3. POST возвращает код ≠ 200
-    monkeypatch.setattr("bot_ai.utils.notifier.requests.post", lambda *a, **k: type("Resp", (), {"status_code": 500, "text": "fail"})())
+    # 3. POST возвращает код ? 200
+    monkeypatch.setattr("bot_ai.utils.notifier.requests.post", lambda *a,
+                        **k: type("Resp", (), {"status_code": 500, "text": "fail"})())
     caplog.clear()
     n_enabled.send("bad message")
     assert any("Ошибка отправки" in m for m in caplog.messages)
@@ -41,8 +47,10 @@ def test_notifier_all_branches(monkeypatch, caplog):
     n_enabled.send("exception message")
     assert any("Ошибка при отправке" in m for m in caplog.messages)
 
-    # 5. provider≠telegram → логируется [NOTIFY]
-    cfg_other = SimpleNamespace(notifications=SimpleNamespace(enabled=True, provider="console"))
+    # 5. provider?telegram > логируется [NOTIFY]
+    cfg_other = SimpleNamespace(
+        notifications=SimpleNamespace(
+            enabled=True, provider="console"))
     n_other = Notifier(cfg_other)
     caplog.clear()
     n_other.send("console message")
@@ -67,3 +75,4 @@ def test_notifier_all_branches(monkeypatch, caplog):
     assert any("Открыта позиция" in m for m in sent_msgs)
     assert any("Закрыта позиция" in m for m in sent_msgs)
     assert any("АЛЕРТ" in m for m in sent_msgs)
+

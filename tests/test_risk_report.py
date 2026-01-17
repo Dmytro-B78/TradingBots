@@ -1,7 +1,6 @@
 ﻿import csv
 import subprocess
 import sys
-from pathlib import Path
 
 def test_risk_report_all_branches(tmp_path):
     """
@@ -47,11 +46,19 @@ def test_risk_report_all_branches(tmp_path):
     assert summary["denies_by_reason"] == {"low_volume": 1}
 
     # 5. generate_summary: сделок нет
-    rr_empty = RiskReport(deny_file=str(tmp_path / "no.csv"), pass_file=str(tmp_path / "no2.csv"))
+    rr_empty = RiskReport(
+        deny_file=str(
+            tmp_path /
+            "no.csv"),
+        pass_file=str(
+            tmp_path /
+            "no2.csv"))
     summary_empty = rr_empty.generate_summary()
     assert summary_empty["total_trades"] == 0
     assert summary_empty["success_rate_pct"] == 0
 
     # 6. Модульный код __main__
-    result = subprocess.run([sys.executable, "-m", "bot_ai.risk.report"], capture_output=True, text=True)
+    result = subprocess.run(
+        [sys.executable, "-m", "bot_ai.risk.report"], capture_output=True, text=True)
     assert "RiskGuard Report" in result.stdout
+

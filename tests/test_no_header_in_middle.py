@@ -14,4 +14,5 @@ def test_no_header_in_middle():
     for i, line in enumerate(lines[1:], start=2):
         assert line != header, f"Повтор заголовка найден в строке {i}: {line}"
 
-    print("✅ Заголовок в середине файла не найден — всё ок")
+    print("? Заголовок в середине файла не найден — всё ок")
+

@@ -1,37 +1,54 @@
-﻿# ============================================
-# File: bot_ai/pipeline_full.py
+﻿# -*- coding: utf-8 -*-
+# ============================================
+# File: pipeline_full.py
+# Назначение: Расширенный отбор пар с выбором стратегии
 # ============================================
 
-import os
-import json
-import logging
-import statistics
+from selector.filters import volume_ok, trend_ok, riskguard_ok
+from selector.trend_utils import is_trending
+from bot_ai.data_loader import load_data
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+DEFAULT_INTERVAL = "1h"
+DEFAULT_QTY = 0.01
 
-def _whitelist_path():
-    return os.getenv("WHITELIST_PATH", os.path.join("data", "whitelist.json"))
+def choose_strategy(df, config) -> str:
+    """
+    Простая логика выбора стратегии:
+    - если тренд есть → ma_crossover
+    - иначе → rsi_reversal
+    """
+    if trend_ok(df, config):
+        return "ma_crossover"
+    return "rsi_reversal"
 
-def save_whitelist(pairs):
-    path = _whitelist_path()
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(pairs, f, ensure_ascii=False, indent=2)
-    return path
+def get_active_symbols(pairs: list, config: dict) -> list:
+    """
+    Возвращает список пар с рекомендованной стратегией и параметрами.
+    """
+    active = []
 
-def _trend_ok(exchange, symbol, timeframe, sma_fast, sma_slow):
-    try:
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe, sma_slow)
-        closes = [c[4] for c in ohlcv]
-        if len(closes) < sma_slow:
-            return False
-        slow = statistics.mean(closes[-sma_slow:])
-        fast = statistics.mean(closes[-sma_fast:])
-        return fast > slow
-    except Exception:
-        return False
+    for pair in pairs:
+        df = load_data(pair, DEFAULT_INTERVAL, limit=100)
+        if df is None or len(df) < 50:
+            continue
 
-def run_full_pipeline(cfg, **kwargs):
-    save_whitelist(["BTC/USDT", "ETH/USDT"])
-    return True
+        # === Фильтры ===
+        if not volume_ok(df, config):
+            print(f"[FILTER:volume] ❌ {pair}")
+            continue
+        if not riskguard_ok(pair, config):
+            print(f"[FILTER:risk] ❌ {pair}")
+            continue
+
+        # === Выбор стратегии ===
+        strategy = choose_strategy(df, config)
+        print(f"[SELECTOR] ✅ {pair} → {strategy}")
+
+        active.append({
+            "pair": pair,
+            "strategy": strategy,
+            "interval": DEFAULT_INTERVAL,
+            "qty": DEFAULT_QTY
+        })
+
+    return active

@@ -1,6 +1,7 @@
 ﻿import csv
 import uuid
 from pathlib import Path
+
 from bot_ai.exec.executor import TradeExecutor
 
 def test_executor_logging_basic(tmp_path):
@@ -15,7 +16,6 @@ def test_executor_logging_basic(tmp_path):
         "sl": 26500.0,
         "tp": 28000.0
     }
-    row = executor.log_trade_to_csv(trade, signal_source="unit_test")
 
     assert Path(log_file).exists()
 
@@ -37,3 +37,4 @@ def test_executor_logging_basic(tmp_path):
     assert logged["side"] == "BUY"
     assert float(logged["price"]) == 27000.5
     assert float(logged["qty"]) == 0.01
+

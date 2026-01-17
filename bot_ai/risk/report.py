@@ -4,11 +4,11 @@
 import csv
 from collections import Counter
 from pathlib import Path
-from typing import Dict, Any
-
+from typing import Any, Dict
 
 class RiskReport:
-    def __init__(self, deny_file: str = "risk_log.csv", pass_file: str = "risk_pass_log.csv"):
+    def __init__(self, deny_file: str = "risk_log.csv",
+                 pass_file: str = "risk_pass_log.csv"):
         self.deny_file = Path(deny_file)
         self.pass_file = Path(pass_file)
 
@@ -28,7 +28,10 @@ class RiskReport:
             "total_trades": total_trades,
             "total_passes": total_passes,
             "total_denies": total_denies,
-            "success_rate_pct": (total_passes / total_trades * 100) if total_trades > 0 else 0,
+            "success_rate_pct": (
+                total_passes /
+                total_trades *
+                100) if total_trades > 0 else 0,
             "denies_by_reason": dict(reason_counts),
         }
         return summary
@@ -40,11 +43,10 @@ class RiskReport:
             reader = csv.DictReader(f)
             return list(reader)
 
-
 if __name__ == "__main__":
     report = RiskReport()
     summary = report.generate_summary()
-    print("📊 RiskGuard Report")
+    print("?? RiskGuard Report")
     print(f"Всего сделок: {summary['total_trades']}")
     print(f"Разрешено: {summary['total_passes']}")
     print(f"Отказано: {summary['total_denies']}")
@@ -52,3 +54,4 @@ if __name__ == "__main__":
     print("Причины отказов:")
     for reason, count in summary["denies_by_reason"].items():
         print(f" - {reason}: {count}")
+

@@ -23,9 +23,12 @@ def rsi_strategy(df, live_mode=False, period=14, overbought=70, oversold=30):
         position = 0
         for i in range(1, len(df)):
             if df['RSI'].iloc[i] < oversold and position <= 0:
-                trades.append({'Time': df['time'].iloc[i], 'Action': 'BUY', 'Price': df['close'].iloc[i]})
+                trades.append(
+                    {'Time': df['time'].iloc[i], 'Action': 'BUY', 'Price': df['close'].iloc[i]})
                 position = 1
             elif df['RSI'].iloc[i] > overbought and position >= 0:
-                trades.append({'Time': df['time'].iloc[i], 'Action': 'SELL', 'Price': df['close'].iloc[i]})
+                trades.append(
+                    {'Time': df['time'].iloc[i], 'Action': 'SELL', 'Price': df['close'].iloc[i]})
                 position = -1
         return pd.DataFrame(trades)
+

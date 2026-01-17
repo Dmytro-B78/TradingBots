@@ -1,5 +1,5 @@
 ﻿import csv
-from pathlib import Path
+
 from bot_ai.risk.guard import RiskGuard
 
 class DummyCtx:
@@ -44,3 +44,4 @@ def test_low_volume_block(tmp_path, monkeypatch):
     assert last["reason"] == "low_volume"
     assert "10" in last["details"]  # должно содержать фактический объём
     assert last["mode"] == "paper"
+

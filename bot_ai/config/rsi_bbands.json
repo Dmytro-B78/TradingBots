@@ -1,0 +1,7 @@
+﻿{
+  "rsi_period": 14,
+  "rsi_oversold": 30,
+  "rsi_overbought": 70,
+  "bb_period": 20,
+  "bb_mult": 2
+}

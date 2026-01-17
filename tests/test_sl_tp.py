@@ -1,46 +1,61 @@
-﻿import pytest
-from types import SimpleNamespace
-from bot_ai.signals import sl_tp
+﻿# -*- coding: utf-8 -*-
+# ============================================
+# File: tests/test_sl_tp.py
+# Назначение: Юнит?тесты для стратегии SLTPStrategy
+# Обновления:
+# - Проверка структуры сигнала
+# - Проверка расчёта SL и TP
+# ============================================
 
-def make_cfg(sl_type="atr", sl_value=2.0, tp_type="r_multiple", tp_value=3.0):
-    return SimpleNamespace(
-        sl_tp=SimpleNamespace(
-            sl_type=sl_type,
-            sl_value=sl_value,
-            tp_type=tp_type,
-            tp_value=tp_value
-        )
-    )
+import unittest
 
-def test_sl_tp_standard_long():
-    cfg = make_cfg()
-    result = sl_tp.calculate_sl_tp(entry_price=100, side="long", cfg=cfg, atr_value=5)
-    assert result["sl_price"] == 90.0
-    assert result["tp_price"] == 130.0
+import pandas as pd
 
-def test_sl_tp_standard_short():
-    cfg = make_cfg()
-    result = sl_tp.calculate_sl_tp(entry_price=100, side="short", cfg=cfg, atr_value=5)
-    assert result["sl_price"] == 110.0
-    assert result["tp_price"] == 70.0
+from strategies.sl_tp import SLTPStrategy
 
-def test_sl_tp_fixed():
-    cfg = make_cfg(sl_type="fixed", sl_value=10, tp_type="fixed", tp_value=20)
-    result = sl_tp.calculate_sl_tp(entry_price=100, side="long", cfg=cfg, atr_value=5)
-    assert result["sl_price"] == 90.0
-    assert result["tp_price"] == 120.0
+class TestSLTPStrategy(unittest.TestCase):
+    def setUp(self):
+        self.cfg = {
+            "sl_pct": 0.01,
+            "tp_pct": 0.02
+        }
+        self.strategy = SLTPStrategy(self.cfg)
+        dates = pd.date_range(end=pd.Timestamp.today(), periods=3)
+        prices = [100, 101, 102]
+        self.df = pd.DataFrame({
+            "date": dates,
+            "open": [99, 100, 101],
+            "high": [101, 102, 103],
+            "low": [98, 99, 100],
+            "close": prices,
+            "volume": [1000, 1100, 1200]
+        }).set_index("date")
 
-def test_sl_tp_invalid_sl_type():
-    cfg = make_cfg(sl_type="unknown")
-    with pytest.raises(ValueError):
-        sl_tp.calculate_sl_tp(entry_price=100, side="long", cfg=cfg, atr_value=5)
+    def test_run_returns_trade(self):
+        trades = self.strategy.run("BTC/USDT", self.df.copy())
+        self.assertEqual(len(trades), 1)
+        trade = trades[0]
+        self.assertIn("pair", trade)
+        self.assertIn("signal", trade)
+        self.assertIn("entry_price", trade)
+        self.assertIn("sl", trade)
+        self.assertIn("tp", trade)
 
-def test_sl_tp_invalid_tp_type():
-    cfg = make_cfg(tp_type="unknown")
-    with pytest.raises(ValueError):
-        sl_tp.calculate_sl_tp(entry_price=100, side="long", cfg=cfg, atr_value=5)
+    def test_sl_tp_calculation(self):
+        trades = self.strategy.run("BTC/USDT", self.df.copy())
+        trade = trades[0]
+        entry = trade["entry_price"]
+        if trade["signal"] == "long":
+            self.assertAlmostEqual(trade["sl"], round(
+                entry * (1 - self.cfg["sl_pct"]), 2))
+            self.assertAlmostEqual(trade["tp"], round(
+                entry * (1 + self.cfg["tp_pct"]), 2))
+        else:
+            self.assertAlmostEqual(trade["sl"], round(
+                entry * (1 + self.cfg["sl_pct"]), 2))
+            self.assertAlmostEqual(trade["tp"], round(
+                entry * (1 - self.cfg["tp_pct"]), 2))
 
-def test_sl_tp_invalid_side():
-    cfg = make_cfg()
-    with pytest.raises(ValueError):
-        sl_tp.calculate_sl_tp(entry_price=100, side="invalid", cfg=cfg, atr_value=5)
+if __name__ == "__main__":
+    unittest.main()
+

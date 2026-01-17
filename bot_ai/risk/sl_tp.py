@@ -1,4 +1,4 @@
-﻿# bot_ai/risk/sl_tp.py
+﻿# bot_ai/risk/sl_tp_OLD.py
 # ------------------------------------------------------------
 # Назначение:
 # Модуль для расчёта динамических уровней Stop Loss (SL) и Take Profit (TP)
@@ -37,3 +37,4 @@ class DynamicSLTP:
         tp = sl * 2.0
 
         return sl, tp
+

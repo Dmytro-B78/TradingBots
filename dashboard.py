@@ -1,8 +1,10 @@
-﻿import streamlit as st
-import pandas as pd
+﻿import json
 import os
-import json
+
+import pandas as pd
 import plotly.express as px
+import streamlit as st
+
 from bot_ai.risk.report import RiskReport
 
 # === Загружаем конфиг ===
@@ -19,10 +21,11 @@ else:
     bot_mode = "unknown"
 
 st.set_page_config(page_title=f"{bot_name} Dashboard", layout="wide")
-st.title(f"📊 {bot_name} ({bot_short}) — режим: {bot_mode}")
+st.title(f"?? {bot_name} ({bot_short}) — режим: {bot_mode}")
 
 # === Вкладки ===
-tab1, tab2, tab3 = st.tabs(["📜 История сделок", "📈 Equity Curve", "🛡️ RiskGuard"])
+tab1, tab2, tab3 = st.tabs(
+    ["?? История сделок", "?? Equity Curve", "??? RiskGuard"])
 
 with tab1:
     st.header("История сделок (live/dry-run)")
@@ -31,14 +34,24 @@ with tab1:
         df_trades = pd.read_csv(trades_file)
 
         # Фильтры
-        symbol_filter = st.selectbox("Фильтр по паре", ["Все"] + sorted(df_trades["Symbol"].dropna().unique().tolist()))
-        side_filter = st.selectbox("Фильтр по направлению", ["Все", "BUY", "SELL"])
+        symbol_filter = st.selectbox(
+            "Фильтр по паре",
+            ["Все"] +
+            sorted(
+                df_trades["Symbol"].dropna().unique().tolist()))
+        side_filter = st.selectbox(
+            "Фильтр по направлению", [
+                "Все", "BUY", "SELL"])
         if symbol_filter != "Все":
             df_trades = df_trades[df_trades["Symbol"] == symbol_filter]
         if side_filter != "Все":
             df_trades = df_trades[df_trades["Side"].str.upper() == side_filter]
 
-        st.dataframe(df_trades.sort_values("Time", ascending=False), use_container_width=True)
+        st.dataframe(
+            df_trades.sort_values(
+                "Time",
+                ascending=False),
+            use_container_width=True)
 
         # Статистика
         closed_trades = df_trades.dropna(subset=["Profit(%)"])
@@ -50,8 +63,10 @@ with tab1:
 
         st.markdown(f"**Всего сделок:** {total_trades}")
         st.markdown(f"**Закрытых сделок:** {total_closed}")
-        st.markdown(f"**Прибыльных сделок:** {profitable} ({(profitable/total_closed*100 if total_closed else 0):.1f}%)")
-        st.markdown(f"**Суммарная прибыль:** {total_profit_pct:.2f}% / {total_profit_usdt:.2f} USDT")
+        st.markdown(
+            f"**Прибыльных сделок:** {profitable} ({(profitable / total_closed * 100 if total_closed else 0):.1f}%)")
+        st.markdown(
+            f"**Суммарная прибыль:** {total_profit_pct:.2f}% / {total_profit_usdt:.2f} USDT")
 
     else:
         st.info("Файл trades_log.csv пока не создан или пуст.")
@@ -68,13 +83,18 @@ with tab2:
                 equity += row["Profit(USDT)"]
             equity_curve.append(equity)
         df_trades["Equity"] = equity_curve
-        fig = px.line(df_trades, x="Time", y="Equity", title="Equity Curve", markers=True)
+        fig = px.line(
+            df_trades,
+            x="Time",
+            y="Equity",
+            title="Equity Curve",
+            markers=True)
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("Нет данных для построения графика.")
 
 with tab3:
-    st.header("🛡️ RiskGuard — статистика отказов и успешных сделок")
+    st.header("??? RiskGuard — статистика отказов и успешных сделок")
     deny_file = "risk_log.csv"
     pass_file = "risk_pass_log.csv"
 
@@ -90,15 +110,30 @@ with tab3:
 
         # Pie chart причин отказов
         if summary["denies_by_reason"]:
-            df_reasons = pd.DataFrame(list(summary["denies_by_reason"].items()), columns=["Причина", "Количество"])
-            fig = px.pie(df_reasons, names="Причина", values="Количество", title="Причины отказов")
+            df_reasons = pd.DataFrame(
+                list(
+                    summary["denies_by_reason"].items()),
+                columns=[
+                    "Причина",
+                    "Количество"])
+            fig = px.pie(
+                df_reasons,
+                names="Причина",
+                values="Количество",
+                title="Причины отказов")
             st.plotly_chart(fig, use_container_width=True)
 
         # Линия динамики отказов по времени
         if os.path.exists(deny_file):
             df_denies = pd.read_csv(deny_file)
             if not df_denies.empty:
-                fig2 = px.line(df_denies, x="timestamp", y=df_denies.index, title="Динамика отказов", markers=True)
+                fig2 = px.line(
+                    df_denies,
+                    x="timestamp",
+                    y=df_denies.index,
+                    title="Динамика отказов",
+                    markers=True)
                 st.plotly_chart(fig2, use_container_width=True)
     else:
         st.info("Файлы risk_log.csv и risk_pass_log.csv пока не созданы.")
+

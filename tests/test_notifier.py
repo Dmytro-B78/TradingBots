@@ -1,6 +1,7 @@
-﻿import pytest
+﻿from types import SimpleNamespace
+
 import requests
-from types import SimpleNamespace
+
 from bot_ai.utils.notifier import Notifier
 
 def make_cfg(enabled=True, provider="telegram", token="T", chat_id="C"):
@@ -17,9 +18,11 @@ def test_send_success(monkeypatch):
     cfg = make_cfg()
     notifier = Notifier(cfg)
     called = {}
+
     def fake_post(url, data, timeout):
         called["url"] = url
         called["data"] = data
+
         class Resp:
             status_code = 200
             text = "OK"
@@ -32,6 +35,7 @@ def test_send_empty_disabled(monkeypatch):
     cfg = make_cfg(enabled=False)
     notifier = Notifier(cfg)
     called = {"flag": False}
+
     def mark_called(*a, **k):
         called["flag"] = True
     monkeypatch.setattr(requests, "post", mark_called)
@@ -41,6 +45,7 @@ def test_send_empty_disabled(monkeypatch):
 def test_send_network_error(monkeypatch):
     cfg = make_cfg()
     notifier = Notifier(cfg)
+
     def fail(*a, **k):
         raise ConnectionError("network down")
     monkeypatch.setattr(requests, "post", fail)
@@ -50,7 +55,12 @@ def test_trade_open(monkeypatch):
     cfg = make_cfg()
     notifier = Notifier(cfg)
     sent = {}
-    monkeypatch.setattr(notifier, "send", lambda msg: sent.setdefault("msg", msg))
+    monkeypatch.setattr(
+        notifier,
+        "send",
+        lambda msg: sent.setdefault(
+            "msg",
+            msg))
     trade_data = {
         "Symbol": "BTCUSDT",
         "Side": "buy",
@@ -66,7 +76,12 @@ def test_trade_close(monkeypatch):
     cfg = make_cfg()
     notifier = Notifier(cfg)
     sent = {}
-    monkeypatch.setattr(notifier, "send", lambda msg: sent.setdefault("msg", msg))
+    monkeypatch.setattr(
+        notifier,
+        "send",
+        lambda msg: sent.setdefault(
+            "msg",
+            msg))
     trade_data = {
         "Symbol": "BTCUSDT",
         "Side": "sell",
@@ -81,6 +96,12 @@ def test_alert(monkeypatch):
     cfg = make_cfg()
     notifier = Notifier(cfg)
     sent = {}
-    monkeypatch.setattr(notifier, "send", lambda msg: sent.setdefault("msg", msg))
+    monkeypatch.setattr(
+        notifier,
+        "send",
+        lambda msg: sent.setdefault(
+            "msg",
+            msg))
     notifier.alert("Test alert")
     assert "АЛЕРТ" in sent["msg"]
+

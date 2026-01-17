@@ -1,7 +1,25 @@
-﻿pytest
-pytest-cov
+﻿# requirements.txt
+# Назначение: Зависимости проекта для установки через pip
+# Структура:
+# └── requirements.txt
+
+# Технический анализ и данные
+ta
+ccxt
 pandas
 numpy
-requests
+
+# Визуализация
 matplotlib
-scikit-learn
+
+# CLI и конфигурации
+python-dotenv
+click
+
+# Тестирование
+pytest
+pytest-cov
+
+# Логирование и отладка
+rich
+loguru

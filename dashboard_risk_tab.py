@@ -1,8 +1,10 @@
-﻿import streamlit as st
-import pandas as pd
-import os
-import plotly.express as px
+﻿import os
 from datetime import datetime
+
+import pandas as pd
+import plotly.express as px
+import streamlit as st
+
 from bot_ai.risk.report import RiskReport
 
 def plot_riskguard_heatmap(log_file: str = "risk_log.csv"):
@@ -29,9 +31,8 @@ def plot_riskguard_heatmap(log_file: str = "risk_log.csv"):
     )
     return fig
 
-
 def show_riskguard_tab():
-    st.header("🛡️ RiskGuard — статистика отказов и успешных сделок")
+    st.header("??? RiskGuard — статистика отказов и успешных сделок")
     deny_file = "risk_log.csv"
     pass_file = "risk_pass_log.csv"
 
@@ -47,15 +48,29 @@ def show_riskguard_tab():
 
         # Pie chart причин отказов
         if summary["denies_by_reason"]:
-            df_reasons = pd.DataFrame(list(summary["denies_by_reason"].items()), columns=["Причина", "Количество"])
-            fig = px.pie(df_reasons, names="Причина", values="Количество", title="Причины отказов")
+            df_reasons = pd.DataFrame(
+                list(
+                    summary["denies_by_reason"].items()),
+                columns=[
+                    "Причина",
+                    "Количество"])
+            fig = px.pie(
+                df_reasons,
+                names="Причина",
+                values="Количество",
+                title="Причины отказов")
             st.plotly_chart(fig, use_container_width=True)
 
         # Линия динамики отказов по времени
         if os.path.exists(deny_file):
             df_denies = pd.read_csv(deny_file)
             if not df_denies.empty:
-                fig2 = px.line(df_denies, x="timestamp", y=df_denies.index, title="Динамика отказов", markers=True)
+                fig2 = px.line(
+                    df_denies,
+                    x="timestamp",
+                    y=df_denies.index,
+                    title="Динамика отказов",
+                    markers=True)
                 st.plotly_chart(fig2, use_container_width=True)
 
         # Heatmap по дням и часам
@@ -64,12 +79,12 @@ def show_riskguard_tab():
             st.plotly_chart(fig_heatmap, use_container_width=True)
 
         # === Экспорт отчёта ===
-        if st.button("💾 Сохранить отчёт (HTML)"):
-            html_report = f"""
+        if st.button("?? Сохранить отчёт (HTML)"):
+            html_report = """
             <html>
             <head><meta charset="utf-8"><title>RiskGuard Report</title></head>
             <body>
-            <h1>📊 RiskGuard Report — {datetime.now().strftime("%Y-%m-%d")}</h1>
+            <h1>?? RiskGuard Report — {datetime.now().strftime("%Y-%m-%d")}</h1>
             <p><b>Всего сделок:</b> {summary['total_trades']}</p>
             <p><b>Разрешено:</b> {summary['total_passes']}</p>
             <p><b>Отказано:</b> {summary['total_denies']}</p>
@@ -83,10 +98,13 @@ def show_riskguard_tab():
             """
             reports_dir = "reports"
             os.makedirs(reports_dir, exist_ok=True)
-            file_path = os.path.join(reports_dir, f"risk_report_{datetime.now().strftime('%Y%m%d')}.html")
+            file_path = os.path.join(
+                reports_dir, f"risk_report_{
+                    datetime.now().strftime('%Y%m%d')}.html")
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(html_report)
             st.success(f"Отчёт сохранён: {file_path}")
 
     else:
         st.info("Файлы risk_log.csv и risk_pass_log.csv пока не созданы.")
+

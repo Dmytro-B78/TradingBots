@@ -1,5 +1,7 @@
-﻿import pytest
-import json
+﻿import json
+
+import pytest
+
 from bot_ai.core import config
 
 def test_load_valid_config(tmp_path):
@@ -26,3 +28,4 @@ def test_file_not_found(tmp_path):
     missing_file = tmp_path / "no_config.json"
     with pytest.raises(FileNotFoundError):
         config.load_config(missing_file)
+

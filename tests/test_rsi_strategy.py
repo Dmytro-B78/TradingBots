@@ -1,5 +1,4 @@
 ﻿import pandas as pd
-import pytest
 
 def test_rsi_strategy_all_branches():
     """
@@ -11,7 +10,13 @@ def test_rsi_strategy_all_branches():
     """
     from bot_ai.strategy import rsi_for_backtest
 
-    func = getattr(rsi_for_backtest, "rsi_strategy", None) or getattr(rsi_for_backtest, "strategy", None)
+    func = getattr(
+        rsi_for_backtest,
+        "rsi_strategy",
+        None) or getattr(
+        rsi_for_backtest,
+        "strategy",
+        None)
     assert callable(func)
 
     def extract_signal(result):
@@ -38,3 +43,4 @@ def test_rsi_strategy_all_branches():
     df_none = pd.DataFrame({"close": [30, 32, 31, 33, 32]})
     signal_none = extract_signal(func(df_none))
     assert signal_none in (None, "buy", "sell")
+

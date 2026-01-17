@@ -1,5 +1,4 @@
 ﻿import logging
-import pytest
 
 def test_position_sizer_calculate_size_all_branches(caplog):
     from bot_ai.risk.position_sizer import PositionSizer
@@ -48,3 +47,4 @@ def test_position_sizer_calculate_size_all_branches(caplog):
     cfg.risk.risk_per_trade_pct = 100
     size6 = ps.calculate_size(entry_price=100)
     assert size6 == cfg.risk.max_size_usdt
+

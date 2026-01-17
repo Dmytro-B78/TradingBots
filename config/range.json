@@ -1,0 +1,15 @@
+﻿{
+  "sma_fast": 20,
+  "sma_slow": 50,
+  "rsi_period": 14,
+  "rsi_oversold": 30,
+  "rsi_overbought": 70,
+  "atr_period": 14,
+  "atr_threshold": 0.005,
+  "adx_period": 14,
+  "adx_min": 20,
+  "stop_loss_pct": 0.02,
+  "min_risk_reward_ratio": 2.0,
+  "max_holding_period": 48,
+  "mode": "range"
+}

@@ -1,4 +1,5 @@
 ﻿import logging
+
 import pandas as pd
 
 def test_dynamic_sltp_all_branches(caplog):
@@ -25,7 +26,8 @@ def test_dynamic_sltp_all_branches(caplog):
     assert any("нет данных OHLCV" in m for m in caplog.messages)
 
     # 2. ATR <= 0
-    df_zero_atr = pd.DataFrame({"high": [1, 1], "low": [1, 1], "close": [1, 1]})
+    df_zero_atr = pd.DataFrame(
+        {"high": [1, 1], "low": [1, 1], "close": [1, 1]})
     sl, tp = sltp.calculate(df_zero_atr, {"Price": 100, "Side": "buy"})
     assert sl is None and tp is None
 
@@ -45,3 +47,4 @@ def test_dynamic_sltp_all_branches(caplog):
     # 6. Продажа
     sl, tp = sltp.calculate(df, {"Price": 100, "Side": "sell"})
     assert sl > 100 and tp < 100
+

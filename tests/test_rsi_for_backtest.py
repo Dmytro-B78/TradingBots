@@ -1,5 +1,4 @@
 ﻿import pandas as pd
-import pytest
 
 def test_rsi_for_backtest_all_branches():
     """
@@ -21,8 +20,15 @@ def test_rsi_for_backtest_all_branches():
     })
 
     # Находим функцию внутри модуля
-    func = getattr(rsi_for_backtest, "rsi_strategy", None) or getattr(rsi_for_backtest, "strategy", None)
-    assert callable(func), "В модуле rsi_for_backtest нет функции rsi_strategy/strategy"
+    func = getattr(
+        rsi_for_backtest,
+        "rsi_strategy",
+        None) or getattr(
+        rsi_for_backtest,
+        "strategy",
+        None)
+    assert callable(
+        func), "В модуле rsi_for_backtest нет функции rsi_strategy/strategy"
 
     # Вызываем стратегию
     result = func(df_buy)
@@ -39,3 +45,4 @@ def test_rsi_for_backtest_all_branches():
         signal_value = result
 
     assert signal_value in (None, "buy", "sell")
+

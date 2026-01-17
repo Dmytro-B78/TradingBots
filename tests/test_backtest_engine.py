@@ -1,42 +1,50 @@
-﻿import pandas as pd
+﻿# -*- coding: utf-8 -*-
+# ============================================
+# File: tests/test_backtest_engine.py
+# Назначение: Тесты для backtest_engine
+# ============================================
 
-def test_backtest_engine_empty_and_with_data(monkeypatch, tmp_path):
-    from bot_ai.backtest import backtest_engine
+import pandas as pd
+import pytest
+from unittest.mock import patch
 
-    # Фиктивный cfg
-    cfg = type("Cfg", (), {})()
-    cfg.exchange = "binance"
+from backtest.backtest_engine import run_backtest
 
-    # 1. Пустые пары → сразу return
-    result_empty = backtest_engine.run_backtest(cfg, [], lambda df: None, "SMA", days=1, timeframes=["1h"])
-    assert result_empty is None
+# === Заглушка для стратегии ===
 
-    # 2. Мокаем ccxt.binance
-    class DummyExchange:
-        def parse8601(self, s): return 0
-        def fetch_ohlcv(self, symbol, timeframe, since, limit):
-            return [
-                [1, 10, 12, 9, 11, 100],
-                [2, 11, 13, 10, 12, 150]
-            ]
-    monkeypatch.setattr(backtest_engine.ccxt, "binance", lambda *a, **k: DummyExchange())
+def dummy_strategy(pair, df, config):
+    return [{
+        "timestamp": df.index[-1].isoformat() if not df.empty else "n/a",
+        "side": "BUY",
+        "price": df["close"].iloc[-1] if not df.empty else 0
+    }]
 
-    # Мокаем RiskGuard, PositionSizer, DynamicSLTP
-    monkeypatch.setattr(backtest_engine, "RiskGuard", lambda cfg: type("RG", (), {
-        "can_open_trade": lambda self, sym: True,
-        "register_trade": lambda self, sym, trade: None
-    })())
-    monkeypatch.setattr(backtest_engine, "PositionSizer", lambda cfg: type("PS", (), {
-        "calculate": lambda self, sym, trade: 1.0
-    })())
-    monkeypatch.setattr(backtest_engine, "DynamicSLTP", lambda cfg: type("DS", (), {
-        "calculate": lambda self, df, trade: (90.0, 110.0)
-    })())
+# === Тест с подменой fetch_ohlcv и select_strategy ===
 
-    # Стратегия возвращает DataFrame с одной сделкой
-    trades_df = pd.DataFrame([{"Profit(%)": 5}])
-    strategy_func = lambda df: trades_df
+@patch("backtest.backtest_engine.fetch_ohlcv")
+@patch("backtest.backtest_engine.select_strategy")
+def test_run_backtest_basic(mock_select_strategy, mock_fetch_ohlcv, capsys):
+    # Подготовка данных
+    df = pd.DataFrame({
+        "open": [1, 2, 3, 4, 5],
+        "high": [2, 3, 4, 5, 6],
+        "low": [0, 1, 2, 3, 4],
+        "close": [1.5, 2.5, 3.5, 4.5, 5.5],
+        "volume": [100, 200, 300, 400, 500]
+    }, index=pd.date_range("2023-01-01", periods=5, freq="1h"))
 
-    # 3. Запуск с одной парой
-    result = backtest_engine.run_backtest(cfg, ["BTC/USDT"], strategy_func, "SMA", days=1, timeframes=["1h"])
-    assert result is None or isinstance(result, type(None))
+    mock_fetch_ohlcv.return_value = df
+    mock_select_strategy.return_value = dummy_strategy
+
+    config = {
+        "strategy": "adaptive",
+        "symbol": "BTCUSDT",
+        "timeframe": "1h"
+    }
+
+    run_backtest(config["symbol"], config["strategy"], config["timeframe"], config)
+
+    captured = capsys.readouterr()
+    assert "[BACKTEST] ▶ BTCUSDT" in captured.out
+    assert "Сигналов: 1" in captured.out
+    assert "BUY" in captured.out

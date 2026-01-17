@@ -39,7 +39,8 @@ def main():
         else:
             subprocess.run(["xdg-open", index_path])  # Linux
 
-    print("✅ Coverage отчёты сохранены в папке coverage_reports")
+    print("? Coverage отчёты сохранены в папке coverage_reports")
 
 if __name__ == "__main__":
     main()
+

@@ -1,5 +1,5 @@
-﻿import pytest
-import logging
+﻿import logging
+
 from bot_ai.core import logging_setup
 
 def test_default_logger_creation():
@@ -21,6 +21,7 @@ def test_logger_with_file(tmp_path):
 
 def test_logger_format(monkeypatch):
     records = []
+
     class DummyHandler(logging.Handler):
         def emit(self, record):
             records.append(record)
@@ -28,3 +29,4 @@ def test_logger_format(monkeypatch):
     logger.addHandler(DummyHandler())
     logger.info("format test")
     assert any("format test" in r.getMessage() for r in records)
+

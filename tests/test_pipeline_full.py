@@ -1,4 +1,4 @@
-﻿import pytest
+﻿
 from bot_ai.selector import pipeline
 
 def test_pipeline_full(monkeypatch, tmp_path):
@@ -13,16 +13,28 @@ def test_pipeline_full(monkeypatch, tmp_path):
     whitelist_file.write_text("[]", encoding="utf-8")
 
     # мокаем путь к whitelist
-    monkeypatch.setattr(pipeline, "_whitelist_path", lambda: str(whitelist_file))
+    monkeypatch.setattr(
+        pipeline,
+        "_whitelist_path",
+        lambda: str(whitelist_file))
 
-    # мокаем json.load → возвращаем список пар
-    monkeypatch.setattr(pipeline.json, "load", lambda f: ["AAA/USDT", "BBB/USDT"])
+    # мокаем json.load > возвращаем список пар
+    monkeypatch.setattr(
+        pipeline.json,
+        "load",
+        lambda f: [
+            "AAA/USDT",
+            "BBB/USDT"])
 
-    # мокаем json.dump → заглушка
+    # мокаем json.dump > заглушка
     monkeypatch.setattr(pipeline.json, "dump", lambda obj, f, *a, **k: None)
 
-    # мокаем show_top_pairs → заглушка
-    monkeypatch.setattr(pipeline, "show_top_pairs", lambda pairs, top_n=2: None)
+    # мокаем show_top_pairs > заглушка
+    monkeypatch.setattr(
+        pipeline,
+        "show_top_pairs",
+        lambda pairs,
+        top_n=2: None)
 
     # выполняем пайплайн
     cfg = {"volume_threshold": 100}
@@ -30,3 +42,4 @@ def test_pipeline_full(monkeypatch, tmp_path):
 
     # проверяем, что список не пустой
     assert result, "select_pairs вернул пустой список"
+

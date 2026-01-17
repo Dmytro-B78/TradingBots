@@ -1,5 +1,5 @@
-﻿import csv
-from pathlib import Path
+﻿from pathlib import Path
+
 from bot_ai.risk.risk_guard import RiskGuardWithLogging, TradeContext
 
 def test_risk_per_trade_logging(tmp_path, monkeypatch):
@@ -19,3 +19,4 @@ def test_risk_per_trade_logging(tmp_path, monkeypatch):
 
     risk_log = Path("risk_log.csv")
     assert risk_log.exists()
+

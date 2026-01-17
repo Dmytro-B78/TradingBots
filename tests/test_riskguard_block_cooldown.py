@@ -1,6 +1,5 @@
 ﻿import csv
-import time
-from pathlib import Path
+
 from bot_ai.risk.guard import RiskGuard
 
 class DummyCtx:
@@ -47,3 +46,4 @@ def test_cooldown_block(tmp_path, monkeypatch):
     assert last["reason"] == "cooldown"
     assert "мин" in last["details"]  # должно содержать упоминание минут
     assert last["mode"] == "paper"
+

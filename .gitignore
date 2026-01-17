@@ -1,58 +1,29 @@
-# ============================
-# NT Project .gitignore
-# ============================
+﻿# ============================================
+# File: .gitignore
+# Назначение: Исключение чувствительных и временных файлов из Git
+# ============================================
 
-# --- Python cache ---
+# 🔐 Конфигурация и ключи
+.env
+
+# 🧪 Примеры и шаблоны
+!.env.example
+
+# 🗃 Кэш и временные файлы
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
 *.pyd
-*.so
 
-# --- Virtualenv ---
+# 🧪 Логи и отладка
+*.log
+
+# 📦 Виртуальные окружения
 .venv/
 env/
 venv/
 
-# --- Pytest / Coverage ---
-.pytest_cache/
-.pytest_tmp/
-.pytest_temp/
-.coverage
-coverage.xml
-htmlcov/
-coverage_reports/
-
-# --- Logs & Reports ---
-logs/
-*.log
-*.csv
-report/
-full_test_log.txt
-night_backtest.*
-trades_log.csv
-trades_log_backup.csv
-risk_log.csv
-risk_pass_log.csv
-
-# --- Data (local artifacts) ---
-data/backtests/
-data/history/
-data/temp/
-data/whitelist.json
-
-# --- IDE / Editor ---
-.idea/
+# 🧱 IDE и редакторы
 .vscode/
-*.iml
-
-# --- System / Temp ---
-.tmp/
+.idea/
 *.swp
-*.swo
-.DS_Store
-Thumbs.db
-
-# --- Generated artifacts ---
-project_snapshot.txt
-failed_tests.log

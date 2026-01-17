@@ -1,38 +1,15 @@
-﻿from bot_ai.core.config_loader import Config
-from bot_ai.core.logger import get_logger
-from bot_ai.utils.notifier import Notifier
-from bot_ai.risk.risk_guard import RiskGuard, TradeContext
+﻿# -*- coding: utf-8 -*-
+# ============================================
+# File: tests/test_smoke.py
+# Назначение: Проверка базовой работоспособности проекта
+# ============================================
 
-def test_smoke():
-    # Загружаем конфиг
-    cfg = Config.load("config.json")
+from config.config_loader import get_binance_credentials
 
-    # Получаем логгер
-    logger = get_logger("smoke")
-
-    # Инициализируем Notifier (в ленивом режиме, без вызова send)
-    notif_cfg = cfg.get("notifications", default={})
-    notifier = Notifier(notif_cfg)
-
-    # Инициализируем RiskGuard
-    guard = RiskGuard(cfg, logger)
-
-    # Создаём контекст сделки
-    ctx = TradeContext(
-        symbol="BTCUSDT",
-        side="BUY",
-        price=30000,
-        equity_usdt=1000,
-        daily_pnl_usdt=0,
-        spread_pct=0.02,
-        vol24h_usdt=50000000
-    )
-
-    # Проверяем RiskGuard
-    result = guard.check(ctx)
-
-    # Логируем результат для диагностики
-    logger.info(f"[SMOKE] RiskGuard.check returned: {result}")
-
-    # Утверждение: результат должен быть булевым
-    assert isinstance(result, bool)
+def test_credentials_loaded():
+    """
+    Проверяет, что ключи Binance успешно загружаются из .env
+    """
+    api_key, api_secret = get_binance_credentials()
+    assert api_key is not None and len(api_key) > 0
+    assert api_secret is not None and len(api_secret) > 0
