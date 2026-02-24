@@ -1,0 +1,10 @@
+# ============================================
+# File: bot_ai/config/rsi_ichimoku.json
+# Purpose: Strategy config for RSI + Ichimoku
+# ============================================
+
+{
+  "rsi_period": 14,
+  "tenkan_period": 9,
+  "kijun_period": 26
+}

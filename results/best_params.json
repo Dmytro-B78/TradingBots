@@ -1,0 +1,42 @@
+[
+  {
+    "symbol": "SHIBUSDT",
+    "best": {
+      "fast_period": 5,
+      "slow_period": 20,
+      "rsi_period": 10
+    }
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "best": {
+      "fast_period": 15,
+      "slow_period": 40,
+      "rsi_period": 10
+    }
+  },
+  {
+    "symbol": "AVAXUSDT",
+    "best": {
+      "fast_period": 10,
+      "slow_period": 40,
+      "rsi_period": 10
+    }
+  },
+  {
+    "symbol": "SOLUSDT",
+    "best": {
+      "fast_period": 15,
+      "slow_period": 40,
+      "rsi_period": 10
+    }
+  },
+  {
+    "symbol": "PEPEUSDT",
+    "best": {
+      "fast_period": 5,
+      "slow_period": 20,
+      "rsi_period": 10
+    }
+  }
+]

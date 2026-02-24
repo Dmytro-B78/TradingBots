@@ -1,0 +1,12 @@
+# ============================================
+# File: bot_ai/config/rsi_bbands.json
+# Purpose: Strategy config for RSI + Bollinger Bands
+# ============================================
+
+{
+  "params": {
+    "bb_period": 20,
+    "bb_std": 2.0,
+    "rsi_period": 14
+  }
+}

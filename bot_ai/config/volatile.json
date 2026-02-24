@@ -1,0 +1,9 @@
+# ============================================
+# File: bot_ai/config/volatile.json
+# Purpose: Strategy config for volatility breakout
+# ============================================
+
+{
+  "window": 20,
+  "multiplier": 2.0
+}

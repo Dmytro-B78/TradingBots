@@ -1,0 +1,11 @@
+# ============================================
+# File: bot_ai/config/rsi_macd.json
+# Purpose: Strategy config for RSI + MACD crossover
+# ============================================
+
+{
+  "rsi_period": 14,
+  "macd_fast": 12,
+  "macd_slow": 26,
+  "macd_signal": 9
+}

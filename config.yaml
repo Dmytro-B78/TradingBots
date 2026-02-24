@@ -1,0 +1,19 @@
+﻿# config.yaml
+# ⚙️ Конфигурация стратегии и режима исполнения
+
+mode: backtest  # варианты: backtest / paper / live
+
+assets:
+  - data/BTCUSDT_4h_fake.csv
+  - data/ETHUSDT_4h_fake.csv
+  - data/SOLUSDT_4h_fake.csv
+  - data/BNBUSDT_4h_fake.csv
+
+strategy:
+  capital: 10000
+  risk_per_trade: 0.01
+  min_rrr: 1.5
+  atr_window: 14
+  atr_threshold: 0.005
+  adx_window: 14
+  adx_threshold: 20

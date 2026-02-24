@@ -1,0 +1,9 @@
+data_path: data/BTCUSDT_4h_fake.csv
+strategy:
+  adx_threshold: 20
+  adx_window: 14
+  atr_threshold: 0.005
+  atr_window: 20
+  capital: 10000
+  min_rrr: 1.2
+  risk_per_trade: 0.02

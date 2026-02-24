@@ -1,0 +1,68 @@
+﻿# ============================================
+# 📂 .github/workflows/ci.yml
+# 🔁 CI & Coverage Report: Windows + GitHub Pages
+# ============================================
+
+name: CI & Coverage Report
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # ------------------------------------------
+  # 🧪 Сборка и тестирование на Windows
+  # ------------------------------------------
+  build-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: 📥 Checkout repo
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: 🛠 Install Chocolatey & GNU Make
+        run: |
+          choco install make -y
+
+      - name: 🧱 Create virtual environment
+        run: python -m venv .venv
+
+      - name: 🚦 Run CI cycle
+        run: make ci
+
+      - name: 📦 Upload coverage report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov
+
+  # ------------------------------------------
+  # 🌐 Публикация покрытия на GitHub Pages
+  # ------------------------------------------
+  publish-coverage:
+    needs: build-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: 📥 Checkout repo
+        uses: actions/checkout@v4
+
+      - name: 📦 Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov
+
+      - name: 🚀 Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: htmlcov

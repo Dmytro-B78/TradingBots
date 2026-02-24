@@ -1,0 +1,65 @@
+﻿{
+  "bot_name": "NeuroTrade",
+  "bot_short": "NT",
+
+  "mode": "dry-run",
+  "exchange": "binance",
+  "quote_asset": "USDT",
+
+  "logging": {
+    "level": "INFO",
+    "file": "logs/bot.log"
+  },
+
+  "risk": {
+    "min_24h_volume_usdt": 1000000,
+    "max_spread_pct": 0.5,
+    "max_daily_loss_pct": 5,
+    "kill_switch_loss_pct": 10,
+    "max_positions": 3,
+    "risk_per_trade_pct": 1,
+    "max_position_size_pct": 20,
+    "test_equity": 1000,
+    "cooldown_minutes": 30,
+    "sl_atr_multiplier": 2.0,
+    "tp_atr_multiplier": 3.0,
+    "atr_period": 14
+  },
+
+  "trend_filter": {
+    "enabled": true,
+    "timeframe": "1h",
+    "sma_fast_period": 50,
+    "sma_slow_period": 200
+  },
+
+  "sl_tp": {
+    "sl_type": "atr",
+    "sl_value": 2.0,
+    "tp_type": "r_multiple",
+    "tp_value": 3.0
+  },
+
+  "notifications": {
+    "enabled": false,
+    "provider": "telegram",
+    "telegram_token": "",
+    "telegram_chat_id": ""
+  },
+
+  "pair_selection": {
+    "d1_timeframe": "1d",
+    "d1_sma_fast": 50,
+    "d1_sma_slow": 200,
+    "ltf_timeframe": "1h",
+    "ltf_sma_fast": 20,
+    "ltf_sma_slow": 50
+  },
+
+  "live_timeframe": "1h",
+  "live_ohlcv_limit": 100,
+  "trade_loop_interval_sec": 60,
+
+  "enable_backtest": true,
+  "enable_dashboard": false
+}

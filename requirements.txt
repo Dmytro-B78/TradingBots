@@ -1,0 +1,26 @@
+# ============================================
+# Path: C:\TradingBots\NT\requirements.txt
+# Назначение: Зависимости проекта для установки через pip
+# Формат: requirements.txt
+# ============================================
+
+# Технический анализ и данные
+ta
+ccxt
+pandas
+numpy
+
+# Визуализация
+matplotlib
+
+# CLI и конфигурации
+python-dotenv
+click
+
+# Тестирование
+pytest
+pytest-cov
+
+# Логирование и отладка
+rich
+loguru

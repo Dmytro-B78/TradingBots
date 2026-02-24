@@ -1,0 +1,20 @@
+﻿{
+  "mode": "paper",
+  "capital": 10000,
+  "symbols": [
+    {
+      "pair": "BTCUSDT",
+      "strategy": "volatile",
+      "interval": "1h",
+      "qty": 0.001
+    },
+    {
+      "pair": "ETHUSDT",
+      "strategy": "volatile",
+      "interval": "1h",
+      "qty": 0.01
+    }
+  ],
+  "strategy_config": "bot_ai/config/volatile.json",
+  "trailing_stop_pct": 0.015
+}
