@@ -3,45 +3,70 @@
   "capital": 1000,
   "risk_per_trade": 0.01,
   "stop_loss_pct": 0.01,
-  "min_risk_reward_ratio": 2.0,
+  "min_risk_reward_ratio": 1.5,
   "max_holding_period": 24,
   "trailing_stop_pct": 0.015,
-
-  "timeframes": ["15m", "1h", "4h"],
+  "take_profit_pct": 0.02,
+  "timeframes": [
+    "15m",
+    "1h",
+    "4h"
+  ],
   "lookback_candles": 150,
-
   "exchange": {
     "name": "binance",
-    "testnet": false
+    "testnet": true
   },
-
   "risk": {
-    "min_24h_volume_usdt": 100000,
-    "max_spread_pct": 1.0,
-    "min_volatility": 0.01,
+    "min_24h_volume_usdt": 50000,
+    "max_spread_pct": 2.0,
+    "min_volatility": 0.0015,
     "top_n_pairs": 20
   },
-
   "backtest": {
     "timeframe": "1h",
     "lookback_bars": 200
   },
-
   "optimize": {
-    "sma_fast_range": [5, 10, 15],
-    "sma_slow_range": [20, 30, 40],
-    "rsi_period_range": [10, 14, 20],
-    "breakout_window_range": [5, 10, 15, 20, 25, 30]
+    "sma_fast_range": [
+      5,
+      10,
+      15
+    ],
+    "sma_slow_range": [
+      20,
+      30,
+      40
+    ],
+    "rsi_period_range": [
+      10,
+      14,
+      20
+    ],
+    "breakout_window_range": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30
+    ]
   },
-
   "params": {
-    "window": 10
+    "window": 10,
+    "rsi_period": 14,
+    "rsi_oversold": 30,
+    "rsi_overbought": 70,
+    "trailing_stop_pct": 0.015,
+    "take_profit_pct": 0.02,
+    "max_holding_period": 24
   },
-
   "compare": {
-    "strategies": ["breakout", "mean_reversion"]
+    "strategies": [
+      "breakout",
+      "mean_reversion"
+    ]
   },
-
   "symbols": [
     {
       "pair": "BTCUSDT",
@@ -56,6 +81,6 @@
       "qty": 0.01
     }
   ],
-
-  "strategy_config": "bot_ai/config/volatile.json"
+  "strategy_config": "bot_ai/config/volatile.json",
+  "log_path": "C:/TradingBots/NT/trades_log.csv"
 }

@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 # ============================================
 # File: bot_ai/paper_trader.py
-# Назначение: Paper/live-цикл без Binance API
-# Использует: strategy_selector, fetch_ohlcv, RiskManager
+# Purpose: Paper/live trading loop without Binance API
+# Uses: StrategySelector, fetch_ohlcv, RiskManager
+# Format: UTF-8 without BOM
 # ============================================
 
 import logging
 import time
-
 from bot_ai.risk.manager import RiskManager
-from bot_ai.strategy.strategy_selector import strategy_selector
+from bot_ai.strategy.strategy_selector import StrategySelector
 from bot_ai.utils.data import fetch_ohlcv
+from bot_ai.core.signal import Signal
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,55 +20,51 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# === Continuous trading loop ===
 def run_trading_loop(cfg):
     pair = cfg["symbol"]
     timeframe = cfg.get("timeframe", "1h")
     strategy_name = cfg.get("strategy", "volatile")
 
-    StrategyClass = strategy_selector.get(strategy_name)
-    if StrategyClass is None:
-        logger.error(f"❌ Стратегия '{strategy_name}' не найдена.")
-        return
-
-    strategy = StrategyClass(cfg)
+    selector = StrategySelector(config={"strategies": [strategy_name]})
     risk = RiskManager(cfg)
 
     while True:
         df = fetch_ohlcv(pair, timeframe=timeframe, limit=100)
         if df is None or df.empty:
-            logger.warning("Нет данных с биржи. Повтор через 60 секунд.")
+            logger.warning("No OHLCV data. Retrying in 60 seconds.")
             time.sleep(cfg.get("poll_interval", 60))
             continue
 
-        signal = strategy.generate_signal(df, cfg)
-        if signal is None or signal["side"] == "flat":
-            logger.info("Нет сигнала или flat.")
+        context = {"df": df, "symbol": pair, "time": time.time()}
+        signal = selector.select(context)
+
+        if not isinstance(signal, Signal) or signal.side == "flat":
+            logger.info("No actionable signal.")
             time.sleep(cfg.get("poll_interval", 60))
             continue
 
-        logger.info(f"Сигнал: {signal}")
+        logger.info(f"Signal: {signal}")
         risk.execute(signal)
 
         time.sleep(cfg.get("poll_interval", 60))
 
+# === One-time signal evaluation ===
 def run_once(cfg):
     pair = cfg["symbol"]
     timeframe = cfg.get("timeframe", "1h")
     strategy_name = cfg.get("strategy", "volatile")
 
-    StrategyClass = strategy_selector.get(strategy_name)
-    if StrategyClass is None:
-        logger.error(f"❌ Стратегия '{strategy_name}' не найдена.")
-        return
-
-    strategy = StrategyClass(cfg)
+    selector = StrategySelector(config={"strategies": [strategy_name]})
     df = fetch_ohlcv(pair, timeframe=timeframe, limit=100)
     if df is None or df.empty:
-        logger.warning("Нет данных с биржи.")
+        logger.warning("No OHLCV data.")
         return
 
-    signal = strategy.generate_signal(df, cfg)
-    if signal is None or signal["side"] == "flat":
-        logger.info("Нет сигнала или flat.")
+    context = {"df": df, "symbol": pair, "time": time.time()}
+    signal = selector.select(context)
+
+    if not isinstance(signal, Signal) or signal.side == "flat":
+        logger.info("No signal or flat.")
     else:
-        logger.info(f"Сигнал: {signal}")
+        logger.info(f"Signal: {signal}")

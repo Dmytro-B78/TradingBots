@@ -1,8 +1,8 @@
 # ============================================
-# Path: C:\TradingBots\NT\bot_ai\strategy\run_strategies.py
-# Purpose: Launch adaptive engine with pair filtering
-# Supports multi-timeframe analysis and signal generation
-# Format: UTF-8 without BOM, ready for production
+# File: bot_ai/strategy/run_strategies.py
+# Purpose: Run RSIReversalStrategy only (temporary override)
+# Format: UTF-8 without BOM
+# Compatible with: config.json, whitelist.json, Signal, logging
 # ============================================
 
 import os
@@ -11,13 +11,13 @@ import logging
 import argparse
 import pandas as pd
 from bot_ai.config.config_loader import load_config
-from bot_ai.strategy.adaptive_strategy_engine import analyze_and_select
+from bot_ai.strategy.rsi_reversal_strategy import RSIReversalStrategy
 from bot_ai.exchanges.exchange_loader import get_exchange_client
 from bot_ai.utils.filter_pairs import filter_pairs
 
 def load_whitelist(path="data/whitelist.json"):
     if not os.path.exists(path):
-        logging.warning(f"⚠️ Whitelist file not found: {path}")
+        logging.warning(f"Whitelist file not found: {path}")
         return []
     with open(path, "r", encoding="utf-8-sig") as f:
         return json.load(f)
@@ -26,25 +26,25 @@ def fetch_ohlcv(client, symbol, timeframe, limit):
     try:
         return client.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
     except Exception as e:
-        logging.error(f"❌ Failed to fetch OHLCV for {symbol} [{timeframe}]: {e}")
+        logging.error(f"Failed to fetch OHLCV for {symbol} [{timeframe}]: {e}")
         return []
 
-def export_signal(result, mode, timeframe):
-    if mode != "paper" or not result:
+def export_signal(signal, mode, timeframe):
+    if mode != "paper" or not signal:
         return
 
     output_dir = "paper_logs"
     os.makedirs(output_dir, exist_ok=True)
 
-    df = pd.DataFrame([result["signal"]])
-    filename = f"{output_dir}/{result['strategy']}_{result['symbol'].replace('/', '')}_{timeframe}_signal.csv"
+    df = pd.DataFrame([signal.to_dict()])
+    filename = f"{output_dir}/{signal.symbol.replace('/', '')}_{timeframe}_rsi_reversal_signal.csv"
     df.to_csv(filename, index=False)
-    logging.info(f"[EXPORT] Signal saved to {filename}")
+    logging.info(f"Signal saved to {filename}")
 
 def run(cfg):
     whitelist = load_whitelist()
     if not whitelist:
-        logging.info("📭 Whitelist is empty — no strategies will run.")
+        logging.info("Whitelist is empty — skipping execution")
         return
 
     timeframes = cfg.get("timeframes", ["1h"])
@@ -52,16 +52,16 @@ def run(cfg):
     mode = cfg.get("mode", "paper")
 
     client = get_exchange_client(cfg)
-
-    # === Filter pairs by volume, spread, volatility ===
     whitelist = filter_pairs(whitelist, client, cfg)
     if not whitelist:
-        logging.info("🚫 No pairs passed filtering.")
+        logging.info("No pairs passed filtering")
         return
+
+    strategy = RSIReversalStrategy(cfg)
 
     for pair in whitelist:
         symbol = pair["symbol"]
-        logging.info(f"📈 Processing pair: {symbol}")
+        logging.info(f"Processing pair: {symbol}")
 
         for tf in timeframes:
             ohlcv = fetch_ohlcv(client, symbol, tf, lookback)
@@ -69,11 +69,13 @@ def run(cfg):
                 continue
 
             df = pd.DataFrame(ohlcv, columns=["time", "open", "high", "low", "close", "volume"])
-            result = analyze_and_select(symbol, df, cfg)
+            df["symbol"] = symbol
+            df.set_index("time", inplace=True)
 
-            if result:
-                logging.info(f"[SIGNAL] {result['symbol']} [{tf}] | {result['strategy']} → {result['signal']}")
-                export_signal(result, mode, tf)
+            signal = strategy.generate_signal(df)
+            if signal:
+                logging.info(f"Signal: {signal}")
+                export_signal(signal, mode, tf)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -90,5 +92,5 @@ if __name__ == "__main__":
     cfg = load_config(args.config)
     cfg["mode"] = args.mode
 
-    logging.info(f"🚀 Starting strategy engine in {args.mode} mode")
+    logging.info(f"Running RSIReversalStrategy in {args.mode} mode")
     run(cfg)
