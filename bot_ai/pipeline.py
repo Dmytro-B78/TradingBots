@@ -106,3 +106,221 @@ def run_pipeline():
 if __name__ == "__main__":
     run_pipeline()
 
+# -*- coding: utf-8 -*-
+"""
+pipeline.py — main trading pipeline.
+
+Responsibilities:
+- load config
+- fetch OHLCV data
+- select strategy
+- generate signal
+- manage position state
+- apply risk manager
+- logging
+"""
+
+import json
+import logging
+import os
+from datetime import datetime, timedelta
+
+from bot_ai.risk.risk_manager import RiskManager
+from bot_ai.strategy.strategy_selector import select_strategy
+from bot_ai.utils.data import fetch_ohlcv
+from bot_ai.utils.state_manager import load_state, save_state
+
+# === Logging setup ===
+os.makedirs("logs", exist_ok=True)
+logging.basicConfig(
+    filename="logs/pipeline.log",
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    encoding="utf-8"
+)
+
+# === Load config ===
+def load_config(path="config.json"):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+# === Parse duration strings like "12h", "30m" ===
+def parse_duration(duration_str):
+    if duration_str.endswith("h"):
+        return timedelta(hours=int(duration_str[:-1]))
+    elif duration_str.endswith("m"):
+        return timedelta(minutes=int(duration_str[:-1]))
+    return timedelta(0)
+
+# === Main pipeline ===
+def run_pipeline():
+    cfg = load_config()
+    strategy_name = cfg.get("strategy", "adaptive")
+    pair = cfg.get("symbol", "BTCUSDT")
+    timeframe = cfg.get("timeframe", "15m")
+
+    logging.info(f"Pipeline start: strategy={strategy_name}, pair={pair}, timeframe={timeframe}")
+    print(f"[PIPELINE] Start: {pair}, strategy={strategy_name}")
+
+    # === Fetch OHLCV ===
+    df = fetch_ohlcv(pair, timeframe)
+    if df is None or df.empty:
+        logging.warning("No OHLCV data")
+        print("[PIPELINE] No OHLCV data")
+        return
+
+    # === Load state ===
+    state = load_state()
+    if "position_opened_at" not in state:
+        state["position_opened_at"] = None
+
+    # === Check max hold duration ===
+    if state["position_opened_at"]:
+        max_hold = parse_duration(cfg.get("max_hold", "12h"))
+        opened_at = datetime.fromisoformat(state["position_opened_at"])
+        now = datetime.utcnow()
+
+        if now - opened_at > max_hold:
+            logging.info("Position held too long — closing")
+            print("[PIPELINE] Position held too long — closing")
+            state["position_opened_at"] = None
+            save_state(state)
+            return
+
+    # === Select strategy ===
+    strategy = select_strategy(strategy_name)
+    if strategy is None:
+        logging.error(f"Strategy '{strategy_name}' not found")
+        print(f"[PIPELINE] Strategy '{strategy_name}' not found")
+        return
+
+    # === Generate signal ===
+    signal = strategy(pair, df, cfg)
+    logging.info(f"Signal: {signal}")
+    print(f"[PIPELINE] Signal: {signal}")
+
+    # === Execute signal ===
+    if signal and signal[0].get("side") in {"BUY", "SELL"}:
+        risk_mgr = RiskManager(cfg)
+        position = risk_mgr.execute(signal[0])
+
+        if position:
+            logging.info(f"Position opened: {position}")
+            print(f"[PIPELINE] Position opened: {position}")
+
+            state["position_opened_at"] = signal[0].get("timestamp") or datetime.utcnow().isoformat()
+            save_state(state)
+        else:
+            logging.info("RiskManager rejected trade")
+            print("[PIPELINE] Trade rejected by RiskManager")
+    else:
+        logging.info("No actionable signal")
+        print("[PIPELINE] No actionable signal")
+
+
+if __name__ == "__main__":
+    run_pipeline()
+# -*- coding: utf-8 -*-
+# ============================================
+# File: bot_ai/pipeline.py
+# Purpose: Main trading pipeline using multi-strategy selector
+# Format: UTF-8 without BOM
+# ============================================
+
+import json
+import logging
+import os
+from datetime import datetime, timedelta
+
+from bot_ai.strategy.strategy_selector import StrategySelector
+from bot_ai.utils.data import fetch_ohlcv
+from bot_ai.utils.state_manager import load_state, save_state
+from bot_ai.risk.risk_manager import RiskManager
+
+# === Logging ===
+os.makedirs("logs", exist_ok=True)
+logging.basicConfig(
+    filename="logs/pipeline.log",
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    encoding="utf-8"
+)
+
+# === Load config ===
+def load_config(path="config.json"):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+# === Parse duration strings ===
+def parse_duration(duration_str):
+    if duration_str.endswith("h"):
+        return timedelta(hours=int(duration_str[:-1]))
+    if duration_str.endswith("m"):
+        return timedelta(minutes=int(duration_str[:-1]))
+    return timedelta(0)
+
+# === Main pipeline ===
+def run_pipeline():
+    cfg = load_config()
+    pair = cfg.get("symbol", "BTCUSDT")
+    timeframe = cfg.get("timeframe", "15m")
+
+    selector = StrategySelector(cfg)
+
+    logging.info(f"Pipeline start: pair={pair}, timeframe={timeframe}")
+    print(f"[PIPELINE] Start: {pair}")
+
+    # === Fetch OHLCV ===
+    df = fetch_ohlcv(pair, timeframe)
+    if df is None or df.empty:
+        logging.warning("No OHLCV data")
+        print("[PIPELINE] No OHLCV data")
+        return
+
+    # === Load state ===
+    state = load_state()
+    if "position_opened_at" not in state:
+        state["position_opened_at"] = None
+
+    # === Max hold check ===
+    if state["position_opened_at"]:
+        max_hold = parse_duration(cfg.get("max_hold", "12h"))
+        opened_at = datetime.fromisoformat(state["position_opened_at"])
+        now = datetime.utcnow()
+
+        if now - opened_at > max_hold:
+            logging.info("Position held too long — closing")
+            print("[PIPELINE] Position held too long — closing")
+            state["position_opened_at"] = None
+            save_state(state)
+            return
+
+    # === Multi-strategy selection ===
+    context = {"df": df, "pair": pair}
+    signal = selector.select(context)
+
+    logging.info(f"Signal: {signal}")
+    print(f"[PIPELINE] Signal: {signal}")
+
+    if not signal or signal["side"] == "HOLD":
+        logging.info("No actionable signal")
+        print("[PIPELINE] No actionable signal")
+        return
+
+    # === Execute trade ===
+    risk_mgr = RiskManager(cfg)
+    position = risk_mgr.execute(signal)
+
+    if position:
+        logging.info(f"Position opened: {position}")
+        print(f"[PIPELINE] Position opened: {position}")
+
+        state["position_opened_at"] = signal.get("timestamp") or datetime.utcnow().isoformat()
+        save_state(state)
+    else:
+        logging.info("Trade rejected by RiskManager")
+        print("[PIPELINE] Trade rejected by RiskManager")
+
+
+if __name__ == "__main__":
+    run_pipeline()

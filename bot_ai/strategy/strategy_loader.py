@@ -1,11 +1,13 @@
 # ============================================
-# File: C:\TradingBots\NT\bot_ai\strategy\strategy_loader.py
+# File: bot_ai/strategy/strategy_loader.py
 # Purpose: Load and run strategy classes dynamically
 # Encoding: UTF-8 without BOM
+# Compatible with strategy_selector and strategy_router
 # ============================================
 
 import importlib
 from bot_ai.core.signal import Signal
+from bot_ai.strategy.strategy_catalog import STRATEGY_CATALOG
 
 def load_strategy_class(strategy_name: str):
     """Dynamically import and return the strategy class by name."""
@@ -19,3 +21,35 @@ def run_strategy(strategy_name: str, df, params: dict = None) -> Signal | None:
     StrategyClass = load_strategy_class(strategy_name)
     strategy = StrategyClass(params or {})
     return strategy.generate_signal(df, params or {})
+
+def load_strategy(name: str):
+    """Load strategy class from STRATEGY_CATALOG by name."""
+    meta = STRATEGY_CATALOG.get(name)
+    if not meta:
+        raise ValueError(f"Strategy not found in catalog: {name}")
+    module = importlib.import_module(meta["module"])
+    return getattr(module, meta["class"])
+# -*- coding: utf-8 -*-
+# ============================================
+# File: bot_ai/strategy/strategy_loader.py
+# Purpose: Dynamic strategy loader for multi-strategy engine
+# Format: UTF-8 without BOM
+# ============================================
+
+from bot_ai.strategy.rsi_reversal_strategy import rsi_reversal_strategy
+from bot_ai.strategy.mean_reversion import mean_reversion_strategy
+from bot_ai.strategy.breakout import breakout_strategy
+
+STRATEGY_MAP = {
+    "rsi_reversal": rsi_reversal_strategy,
+    "mean_reversion": mean_reversion_strategy,
+    "breakout": breakout_strategy
+}
+
+def load_strategy(name: str):
+    """
+    Returns strategy class by name.
+    """
+    if name not in STRATEGY_MAP:
+        raise ValueError(f"Strategy not found: {name}")
+    return STRATEGY_MAP[name]

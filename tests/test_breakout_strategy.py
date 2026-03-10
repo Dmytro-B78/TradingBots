@@ -1,5 +1,29 @@
-# -*- coding: utf-8 -*-# ============================================# ?? File: tests/test_breakout_strategy.py# ?? Р В Р’В Р РЋРЎС™Р В Р’В Р вЂ™Р’В°Р В Р’В Р вЂ™Р’В·Р В Р’В Р В РІР‚В¦Р В Р’В Р вЂ™Р’В°Р В Р Р‹Р Р†Р вЂљР Р‹Р В Р’В Р вЂ™Р’ВµР В Р’В Р В РІР‚В¦Р В Р’В Р РЋРІР‚ВР В Р’В Р вЂ™Р’Вµ: Р В Р’В Р вЂ™Р’В®Р В Р’В Р В РІР‚В¦Р В Р’В Р РЋРІР‚ВР В Р Р‹Р Р†Р вЂљРЎв„ў-Р В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р вЂ™Р’ВµР В Р Р‹Р В РЎвЂњР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р Р†Р вЂљРІвЂћвЂ“ Р В Р’В Р СћРІР‚ВР В Р’В Р вЂ™Р’В»Р В Р Р‹Р В Р РЏ Р В Р Р‹Р Р†Р вЂљРЎвЂєР В Р Р‹Р РЋРІР‚СљР В Р’В Р В РІР‚В¦Р В Р’В Р РЋРІР‚СњР В Р Р‹Р Р†Р вЂљР’В Р В Р’В Р РЋРІР‚ВР В Р’В Р РЋРІР‚В run() Р В Р’В Р РЋРІР‚ВР В Р’В Р вЂ™Р’В· breakout.py# ? Р В Р’В Р РЋРЎСџР В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚СћР В Р’В Р В РІР‚В Р В Р’В Р вЂ™Р’ВµР В Р Р‹Р В РІР‚С™Р В Р Р‹Р В Р РЏР В Р’В Р вЂ™Р’ВµР В Р Р‹Р Р†Р вЂљРЎв„ў Р В Р Р‹Р В РЎвЂњР В Р’В Р РЋРІР‚ВР В Р’В Р РЋРІР‚вЂњР В Р’В Р В РІР‚В¦Р В Р’В Р вЂ™Р’В°Р В Р’В Р вЂ™Р’В»Р В Р Р‹Р Р†Р вЂљРІвЂћвЂ“ Р В Р’В Р РЋРІР‚вЂќР В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’В±Р В Р’В Р РЋРІР‚СћР В Р Р‹Р В Р РЏ high/low Р В Р’В Р СћРІР‚ВР В Р’В Р РЋРІР‚ВР В Р’В Р вЂ™Р’В°Р В Р’В Р РЋРІР‚вЂќР В Р’В Р вЂ™Р’В°Р В Р’В Р вЂ™Р’В·Р В Р’В Р РЋРІР‚СћР В Р’В Р В РІР‚В¦Р В Р’В Р вЂ™Р’В°# ============================================import pytestimport pandas as pdfrom bot_ai.strategy import breakout@pytest.fixturedef sample_df_buy():`n    pass    data = {        "time": pd.date_range(start="2026-01-01", periods=21, freq="1h"),        "high": [100]*19 + [105, 110],        "low": [90]*21,        "close": [95]*19 + [106, 111],    }    return pd.DataFrame(data)@pytest.fixturedef sample_df_sell():`n    pass    data = {        "time": pd.date_range(start="2026-01-01", periods=21, freq="1h"),        "high": [110]*21,        "low": [90]*19 + [85, 80],        "close": [100]*19 + [84, 79],    }    return pd.DataFrame(data)@pytest.fixturedef sample_df_none():`n    pass    data = {        "time": pd.date_range(start="2026-01-01", periods=21, freq="1h"),        "high": [100]*21,        "low": [90]*21,        "close": [95]*21,    }    return pd.DataFrame(data)def test_run_returns_buy_signal(monkeypatch, sample_df_buy):`n    pass    monkeypatch.setattr(breakout, "fetch_ohlcv", lambda pair, timeframe: sample_df_buy)    signal = breakout.run("BTCUSDT", "1h")    assert signal == "buy"def test_run_returns_sell_signal(monkeypatch, sample_df_sell):`n    pass    monkeypatch.setattr(breakout, "fetch_ohlcv", lambda pair, timeframe: sample_df_sell)    signal = breakout.run("BTCUSDT", "1h")    assert signal == "sell"def test_run_returns_none(monkeypatch, sample_df_none):`n    pass    monkeypatch.setattr(breakout, "fetch_ohlcv", lambda pair, timeframe: sample_df_none)    signal = breakout.run("BTCUSDT", "1h")    assert signal is None
+import pytest
+import pandas as pd
+from bot_ai.strategy.breakout import BreakoutStrategy
 
+@pytest.fixture
+def sample_df():
+    data = {
+        "time": pd.date_range(start="2026-01-01", periods=40, freq="1h"),
+        "open": [100 + i for i in range(40)],
+        "high": [101 + i for i in range(40)],
+        "low": [99 + i for i in range(40)],
+        "close": [100 + i for i in range(20)] + [120 - i for i in range(20)],
+        "volume": [10.0] * 40
+    }
+    return pd.DataFrame(data)
 
-
-
+def test_breakout_strategy_generate_signals(sample_df):
+    config = {
+        "symbol": "BTCUSDT",
+        "lookback": 20,
+        "take_profit_pct": 0.03,
+        "stop_loss_pct": 0.01,
+        "max_holding_period": 24
+    }
+    strategy = BreakoutStrategy(config)
+    df = strategy.calculate_indicators(sample_df)
+    df = strategy.generate_signals(df)
+    assert "signal" in df.columns
+    assert df["signal"].isin(["BUY", "SELL", None]).all()

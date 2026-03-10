@@ -1,157 +1,108 @@
 # ============================================
-# File: bot_ai/strategy/trader.py
-# Назначение: Торговый цикл с поддержкой BaseStrategy, MarketContext и Signal
-# Обновлено: Поддержка strategy_router для автоматического выбора стратегии
+# File: bot_ai/strategy/live_trader_engine.py
+# Purpose: Execute live or paper trades using selected strategy
+# Format: UTF-8 without BOM
+# Features: Binance Testnet, adaptive routing, trailing stop, CSV logging
 # ============================================
 
-import csv
 import logging
-import os
 import time
+import os
+import csv
 from datetime import datetime
-
 from binance.client import Client
-from binance.enums import ORDER_TYPE_MARKET, SIDE_BUY, SIDE_SELL
+from bot_ai.data_loader import get_binance_ohlcv
+from bot_ai.state.position_tracker import PositionTracker
+from bot_ai.strategy.strategy_router import get_strategy, route_strategy
 
-from bot_ai.core.context import MarketContext
-from bot_ai.core.signal import Signal
-from bot_ai.risk.position_manager import PositionManager
-from bot_ai.risk.risk_manager import RiskManager
-from bot_ai.strategy import strategy_selector
-from bot_ai.strategy.strategy_router import route_strategy
-from bot_ai.strategy.strategy_validator import validate_config
-from bot_ai.utils.data import fetch_ohlcv
-from bot_ai.utils.notifier import Notifier
-
-logger = logging.getLogger(__name__)
-
-def save_trade_to_csv(trade: dict, path: str = "trades_log.csv"):
+# === Save trade to CSV ===
+def log_trade(symbol, action, price, qty, time_str, mode, path="logs/trades_log.csv"):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     file_exists = os.path.isfile(path)
     with open(path, mode="a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=trade.keys())
+        writer = csv.DictWriter(f, fieldnames=[
+            "timestamp", "symbol", "action", "price", "qty", "mode"
+        ])
         if not file_exists:
             writer.writeheader()
-        writer.writerow(trade)
-
-def place_order_binance(client, symbol: str, side: str, qty: float) -> dict:
-    try:
-        binance_side = SIDE_BUY if side == "long" else SIDE_SELL
-        order = client.create_order(
-            symbol=symbol.upper(),
-            side=binance_side,
-            type=ORDER_TYPE_MARKET,
-            quantity=qty
-        )
-        price = float(order["fills"][0]["price"])
-        logger.info(f"[BINANCE] Ордер исполнен: {side.upper()} {qty} {symbol} @ {price}")
-        return {
-            "status": "filled",
-            "filled_price": price,
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"[BINANCE] Ошибка при размещении ордера: {e}")
-        return {"status": "error", "error": str(e)}
-
-def run_trading_loop(cfg):
-    try:
-        validate_config(cfg)
-    except ValueError as e:
-        logger.error(f"Ошибка валидации конфигурации: {e}")
-        return
-
-    pair = cfg["symbol"]
-    timeframe = cfg.get("timeframe", "1h")
-    strategy_name = cfg.get("strategy", "adaptive")
-
-    trailing_sl = cfg.get("trailing_sl", None)
-    partial_pct = cfg.get("partial_pct", 0.5)
-    move_sl_to_be = cfg.get("move_sl_to_be", True)
-
-    client = Client(cfg["binance_api_key"], cfg["binance_api_secret"])
-    risk = RiskManager(cfg)
-    notifier = Notifier(cfg)
-    position = PositionManager()
-
-    logger.info(f"Старт стратегии: {strategy_name} | Пара: {pair} | Таймфрейм: {timeframe}")
-
-    while True:
-        df = fetch_ohlcv(pair, timeframe=timeframe, limit=100)
-        if df is None or df.empty:
-            logger.warning("Нет данных OHLCV. Повтор через 60 секунд.")
-            time.sleep(60)
-            continue
-
-        context = MarketContext(df=df, symbol=pair, time=datetime.utcnow())
-
-        # === Выбор стратегии ===
-        if strategy_name == "adaptive":
-            strategy = route_strategy(df, config={})
-        else:
-            strategy = strategy_selector.get(strategy_name)
-            if strategy is None:
-                logger.error(f"Стратегия '{strategy_name}' не найдена.")
-                return
-
-        if not hasattr(strategy, "generate_signal"):
-            logger.error(f"Стратегия '{strategy_name}' не реализует метод generate_signal(context).")
-            return
-
-        signal = strategy.generate_signal(context)
-
-        if not isinstance(signal, Signal):
-            logger.info("Нет сигнала от стратегии.")
-            time.sleep(cfg.get("poll_interval", 60))
-            continue
-
-        logger.info(f"Сигнал: {signal}")
-        current_price = df["close"].iloc[-1]
-
-        if position.is_open():
-            position.update_trailing_sl(current_price)
-            exit_info = position.check_exit(current_price)
-            if exit_info:
-                logger.info(f"Выход из позиции: {exit_info}")
-                notifier.trade_close(exit_info)
-                save_trade_to_csv(exit_info)
-                time.sleep(cfg.get("poll_interval", 60))
-                continue
-
-        result = risk.execute(signal)
-        if result is None:
-            logger.info("Сигнал отклонён RiskManager.")
-            notifier.alert("Сигнал отклонён RiskManager.")
-            time.sleep(cfg.get("poll_interval", 60))
-            continue
-
-        order = place_order_binance(client, pair, signal.side, result["qty"])
-        if order["status"] != "filled":
-            notifier.alert("Ошибка при размещении ордера.")
-            time.sleep(cfg.get("poll_interval", 60))
-            continue
-
-        notifier.trade_open({
-            "Symbol": pair,
-            "Side": signal.side,
-            "Price": order["filled_price"],
-            "PositionSize": result["qty"],
-            "SL": result["sl"],
-            "TP1": result["tp1"],
-            "TP2": result["tp2"]
+        writer.writerow({
+            "timestamp": time_str,
+            "symbol": symbol,
+            "action": action,
+            "price": price,
+            "qty": qty,
+            "mode": mode
         })
 
-        position.open(
-            symbol=pair,
-            side=signal.side,
-            entry=order["filled_price"],
-            sl=result["sl"],
-            tp1=result["tp1"],
-            tp2=result["tp2"],
-            qty=result["qty"],
-            strategy=strategy_name,
-            trailing_sl=trailing_sl,
-            partial_pct=partial_pct,
-            move_sl_to_be=move_sl_to_be
-        )
+# === Main trading loop ===
+def run_trading_loop(cfg):
+    symbol = cfg["symbol"]
+    timeframe = cfg.get("interval", "1h")
+    capital = cfg.get("initial_balance", 1000)
+    risk_per_trade = cfg.get("risk_per_trade", 0.01)
+    stop_loss_pct = cfg.get("stop_loss_pct", 0.01)
+    trailing_stop_pct = cfg.get("trailing_stop_pct", None)
+    adaptive = cfg.get("strategy") == "adaptive"
+    qty = cfg.get("qty", 0.001)
+    lookback = cfg.get("lookback_candles", 150)
+    mode = cfg.get("mode", "paper")
 
-        time.sleep(cfg.get("poll_interval", 60))
+    # === Load historical candles ===
+    df = get_binance_ohlcv(symbol, timeframe, limit=lookback)
+    if df is None or df.empty:
+        logging.error(f"[DATA] Failed to load candles for {symbol}")
+        return
+
+    # === Select strategy ===
+    if adaptive:
+        strategy = route_strategy(df, cfg)
+    else:
+        strategy = get_strategy(cfg["strategy"], cfg)
+
+    # === Generate signal ===
+    signal = strategy.generate_signal(df)
+    if not signal:
+        logging.info(f"[{symbol}] No signal generated.")
+        return
+
+    logging.info(f"[{symbol}] Signal: {signal.action} @ {signal.price}")
+
+    # === Position tracking ===
+    tracker = PositionTracker(symbol, timeframe)
+    open_pos = tracker.load()
+
+    # === Trailing stop logic ===
+    if open_pos and trailing_stop_pct:
+        last_price = df["close"].iloc[-1]
+        entry_price = open_pos["open_price"]
+        trail_price = entry_price * (1 - trailing_stop_pct)
+        if last_price <= trail_price:
+            logging.info(f"[{symbol}] Trailing stop triggered at {last_price}")
+            if mode == "live":
+                client = Client(cfg["api_key"], cfg["api_secret"], testnet=True)
+                client.order_market_sell(symbol=symbol, quantity=qty)
+            tracker.clear()
+            log_trade(symbol, "SELL", last_price, qty, datetime.utcnow().isoformat(), mode)
+            return
+
+    # === Execute BUY ===
+    if signal.action.upper() == "BUY" and not open_pos:
+        logging.info(f"[{symbol}] Executing BUY at {signal.price} for qty={qty}")
+        if mode == "live":
+            client = Client(cfg["api_key"], cfg["api_secret"], testnet=True)
+            client.order_market_buy(symbol=symbol, quantity=qty)
+        tracker.save(signal.time, signal.price)
+        log_trade(symbol, "BUY", signal.price, qty, signal.time, mode)
+
+    # === Execute SELL ===
+    elif signal.action.upper() == "SELL" and open_pos:
+        logging.info(f"[{symbol}] Executing SELL at {signal.price}")
+        if mode == "live":
+            client = Client(cfg["api_key"], cfg["api_secret"], testnet=True)
+            client.order_market_sell(symbol=symbol, quantity=qty)
+        tracker.clear()
+        log_trade(symbol, "SELL", signal.price, qty, signal.time, mode)
+
+    # === No trade executed ===
+    else:
+        logging.info(f"[{symbol}] No trade executed. Signal={signal.action}, Open={bool(open_pos)}")

@@ -1,55 +1,85 @@
 # ============================================
-# File: bot_ai/selector/pipeline_select_pairs.py
-# Purpose: Select all available USDT pairs from Binance Spot Testnet (no filters)
-# Encoding: UTF-8
+# File: C:\TradingBots\NT\bot_ai\selector\pipeline_select_pairs.py
+# Purpose: Select USDT pairs (test-friendly)
+# Encoding: UTF-8 without BOM
 # ============================================
 
 import logging
-import json
-import os
-import csv
-import time
-from binance.spot import Spot
+import ccxt
+from bot_ai.strategy.strategy_loader import load_strategy
+from . import pipeline_utils
+
+
+def cfg_get(cfg, key, default=None):
+    if isinstance(cfg, dict):
+        return cfg.get(key, default)
+    return getattr(cfg, key, default)
+
+
+def detect_regime(*args, **kwargs):
+    return "neutral"
+
 
 def get_exchange_client(cfg):
-    if cfg["exchange"].get("testnet", False):
-        base_url = "https://testnet.binance.vision"
-    else:
-        base_url = "https://api.binance.com"
+    exchange_cfg = cfg_get(cfg, "exchange", {})
+    api_key = cfg_get(exchange_cfg, "apiKey")
+    secret = cfg_get(exchange_cfg, "secret")
+    testnet = cfg_get(exchange_cfg, "testnet", False)
 
-    return Spot(
-        api_key=cfg["exchange"].get("apiKey"),
-        api_secret=cfg["exchange"].get("secret"),
-        base_url=base_url
-    )
+    params = {"apiKey": api_key, "secret": secret}
 
-def select_pairs(cfg):
-    t0 = time.time()
+    if testnet:
+        params["options"] = {"defaultType": "spot"}
+        params["urls"] = {"api": {"public": "https://testnet.binance.vision/api"}}
+
+    return ccxt.binance(params)
+
+
+def select_pairs(cfg, risk_guard=None):
     logging.info("[SELECTOR] >>> START select_pairs()")
 
     client = get_exchange_client(cfg)
 
-    t1 = time.time()
     logging.info("[SELECTOR] Loading exchange info...")
-    info = client.exchange_info()
-    symbols = [s for s in info["symbols"] if s["quoteAsset"] == "USDT" and s["status"] == "TRADING"]
-    logging.info(f"[SELECTOR] Loaded {len(symbols)} USDT pairs in {time.time() - t1:.2f}s")
+
+    # --- MODE 1: ccxt client ---
+    if hasattr(client, "load_markets"):
+        markets = client.load_markets()
+        symbols = list(markets.keys())
+
+        def get_ticker(sym):
+            return client.fetch_ticker(sym)
+
+    # --- MODE 2: MockClient from tests ---
+    elif hasattr(client, "exchange_info"):
+        info = client.exchange_info()
+        symbols = [s["symbol"] for s in info["symbols"]]
+
+        # Build ticker map
+        tickers = {t["symbol"]: t for t in client.ticker_24hr()}
+
+        def get_ticker(sym):
+            return tickers.get(sym)
+
+    else:
+        raise RuntimeError("Unsupported exchange mock")
 
     raw_pairs = []
-    t2 = time.time()
 
-    tickers = {t["symbol"]: t for t in client.ticker_24hr()}
     for s in symbols:
-        symbol = s["symbol"]
-        ticker = tickers.get(symbol)
+        raw_symbol = s
+        ccxt_symbol = s if "/" in s else s.replace("USDT", "/USDT")
+
+        # Try raw symbol first (mock), then ccxt symbol
+        ticker = get_ticker(raw_symbol) or get_ticker(ccxt_symbol)
         if not ticker:
             continue
 
         try:
             volume = float(ticker.get("quoteVolume", 0))
-            price = float(ticker.get("lastPrice", 0))
-            ask = float(ticker.get("askPrice", 0))
-            bid = float(ticker.get("bidPrice", 0))
+            price = float(ticker.get("lastPrice", ticker.get("last", 0)))
+            ask = float(ticker.get("askPrice", ticker.get("ask", 0)))
+            bid = float(ticker.get("bidPrice", ticker.get("bid", 0)))
         except Exception:
             continue
 
@@ -57,39 +87,45 @@ def select_pairs(cfg):
             continue
 
         spread = (ask - bid) / ask * 100
+
         raw_pairs.append({
-            "symbol": symbol,
+            "pair": raw_symbol,
             "volume": volume,
             "price": price,
             "spread": spread
         })
 
-    logging.info(f"[SELECTOR] {len(raw_pairs)} pairs collected (in {time.time() - t2:.2f}s)")
-    for p in raw_pairs:
-        logging.info(f"[PAIR] {p['symbol']} | Volume: {p['volume']:.0f} | Price: {p['price']} | Spread: {p['spread']:.2f}%")
-
-    top_n = cfg["risk"].get("top_n_pairs", 20)
+    risk_cfg = cfg_get(cfg, "risk", {})
+    top_n = cfg_get(risk_cfg, "top_n_pairs", 20)
     top_pairs = raw_pairs[:top_n]
-    selected_symbols = [p["symbol"] for p in top_pairs]
 
-    logging.info(f"[SELECTED] Top {top_n} pairs (no filters):")
-    for p in top_pairs:
-        logging.info(f"  {p['symbol']} | Volume: {p['volume']:.0f} | Spread: {p['spread']:.2f}%")
+    # Strategy selection (optional)
+    strategy_cfg = cfg_get(cfg, "strategy", None)
 
-    os.makedirs("data", exist_ok=True)
+    if strategy_cfg:
+        strategy_name = cfg_get(strategy_cfg, "name")
+        strategy_params = cfg_get(strategy_cfg, "params", {})
 
-    with open("data/whitelist.json", "w", encoding="utf-8") as f:
-        json.dump(selected_symbols, f, indent=2)
-    logging.info(f"[SAVE] Saved {len(selected_symbols)} pairs to data/whitelist.json")
+        StrategyClass = load_strategy(strategy_name)
 
-    metrics_path = "data/pair_metrics.csv"
-    with open(metrics_path, "w", newline="", encoding="utf-8") as csvfile:
-        import csv
-        writer = csv.DictWriter(csvfile, fieldnames=["symbol", "volume", "price", "spread"])
-        writer.writeheader()
-        for row in raw_pairs:
-            writer.writerow(row)
-    logging.info(f"[SAVE] Saved metrics for {len(raw_pairs)} pairs to {metrics_path}")
+        for pair in top_pairs:
+            symbol = pair["pair"]
+            params = dict(strategy_params)
+            params["symbol"] = symbol
 
-    logging.info(f"[SELECTOR] <<< END select_pairs() in {time.time() - t0:.2f}s")
+            strategy = StrategyClass(params)
+
+            df = pipeline_utils.get_data(
+                symbol=symbol,
+                interval="1h",
+                lookback=50,
+                source="binance",
+                testnet=cfg_get(cfg_get(cfg, "exchange", {}), "testnet", False)
+            )
+
+            signal = strategy.generate_signal(df)
+            if signal:
+                pipeline_utils.log_signal(signal)
+
+    logging.info("[SELECTOR] <<< END select_pairs()")
     return top_pairs

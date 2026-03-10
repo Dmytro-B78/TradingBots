@@ -127,3 +127,107 @@ class RiskManager:
             if not file_exists:
                 writer.writeheader()
             writer.writerow(trade)
+# -*- coding: utf-8 -*-
+# ============================================
+# File: bot_ai/risk/risk_manager.py
+# Purpose: Unified Risk Manager for multi-strategy engine
+# Format: UTF-8 without BOM
+# ============================================
+
+from datetime import datetime
+
+class RiskManager:
+    """
+    Validates and executes trading signals.
+    """
+
+    def __init__(self, config):
+        self.config = config
+        self.max_position_size = config.get("max_position_size", 0.05)
+        self.min_confidence = config.get("min_confidence", 0.2)
+
+    def validate(self, signal):
+        """
+        Validate signal structure and confidence.
+        """
+        if not signal:
+            return False
+
+        side = signal.get("side")
+        if side not in ("BUY", "SELL"):
+            return False
+
+        confidence = signal.get("confidence", 0)
+        if confidence < self.min_confidence:
+            return False
+
+        return True
+
+    def execute(self, signal):
+        """
+        Execute validated signal.
+        Returns a position dict or None.
+        """
+        if not self.validate(signal):
+            return None
+
+        position = {
+            "side": signal["side"],
+            "timestamp": signal.get("timestamp", datetime.utcnow().isoformat()),
+            "size": self.max_position_size,
+            "confidence": signal.get("confidence", 0)
+        }
+
+        return position
+# -*- coding: utf-8 -*-
+# ============================================
+# File: bot_ai/risk/risk_manager.py
+# Purpose: Unified Risk Manager for multi-strategy engine
+# Format: UTF-8 without BOM
+# ============================================
+
+from datetime import datetime
+
+class RiskManager:
+    """
+    Validates and executes trading signals.
+    """
+
+    def __init__(self, config):
+        self.config = config
+        self.max_position_size = config.get("max_position_size", 0.05)
+        self.min_confidence = config.get("min_confidence", 0.2)
+
+    def validate(self, signal):
+        """
+        Validate signal structure and confidence.
+        """
+        if not signal:
+            return False
+
+        side = signal.get("side")
+        if side not in ("BUY", "SELL"):
+            return False
+
+        confidence = signal.get("confidence", 0)
+        if confidence < self.min_confidence:
+            return False
+
+        return True
+
+    def execute(self, signal):
+        """
+        Execute validated signal.
+        Returns a position dict or None.
+        """
+        if not self.validate(signal):
+            return None
+
+        position = {
+            "side": signal["side"],
+            "timestamp": signal.get("timestamp", datetime.utcnow().isoformat()),
+            "size": self.max_position_size,
+            "confidence": signal.get("confidence", 0)
+        }
+
+        return position

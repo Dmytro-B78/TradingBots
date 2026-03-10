@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
 # ============================================
-# Файл: bot_ai/selector/pipeline.py
-# Назначение: Отбор торговых пар и сохранение whitelist
+# File: C:\TradingBots\NT\bot_ai\selector\pipeline.py
+# Purpose: Trading pair selection and whitelist saving
+# Encoding: UTF-8 without BOM
 # ============================================
 
 import os
@@ -11,44 +11,47 @@ import argparse
 import yaml
 import ccxt
 
-# Импорты из соседних модулей
 from .pipeline_select_pairs import select_pairs
 from .pipeline_show_fix import show_top_pairs
 from . import pipeline_utils
 from . import filters
 from . import metrics
 from . import trend_utils
+from bot_ai.strategy.strategy_loader import load_strategy
 
-# Путь к файлу whitelist
+load_strategy = load_strategy
+
 _whitelist_path = "data/whitelist.json"
 
-# === Основная функция отбора пар ===
+
 def fetch_and_filter_pairs(cfg, use_cache=True, cache_ttl_hours=24):
     if use_cache and os.path.exists(_whitelist_path):
-        logging.info("[CACHE] Загрузка whitelist из файла")
+        logging.info("[CACHE] Loading whitelist from file")
         with open(_whitelist_path, "r", encoding="utf-8") as f:
             whitelist = json.load(f)
         return whitelist
 
-    logging.info("[CACHE] Кэш не используется или файл отсутствует — пересчёт")
+    logging.info("[CACHE] Cache not used or file missing — recomputing")
     pairs = select_pairs(cfg)
-    logging.info(f"[DEBUG] Отобрано пар: {len(pairs)}")
+    logging.info(f"[DEBUG] Selected pairs: {len(pairs)}")
 
     show_top_pairs(cfg, pairs)
 
+    # FIX: use "pair" instead of "symbol"
     whitelist = [p["pair"] for p in pairs]
+
     os.makedirs(os.path.dirname(_whitelist_path), exist_ok=True)
     with open(_whitelist_path, "w", encoding="utf-8") as f:
         json.dump(whitelist, f, indent=2, ensure_ascii=False)
 
-    logging.info(f"✅ Сохранено {len(whitelist)} пар в {_whitelist_path}")
+    logging.info(f"Saved {len(whitelist)} pairs to {_whitelist_path}")
     return whitelist
 
-# === Обёртка для внешнего вызова ===
+
 def run_pipeline(cfg):
     return fetch_and_filter_pairs(cfg)
 
-# === CLI-запуск ===
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
@@ -56,7 +59,6 @@ def main():
     parser.add_argument("--log-level", type=str, default="INFO")
     args = parser.parse_args()
 
-    # Настройка логгера: консоль + файл, UTF-8
     log_level = getattr(logging, args.log_level.upper(), logging.INFO)
     log_format = "%(asctime)s [%(levelname)s] %(message)s"
     log_dir = "logs"
@@ -71,15 +73,15 @@ def main():
         ]
     )
 
-    logging.info(f"🚀 Запуск pipeline в режиме {args.mode}")
+    logging.info(f"Running pipeline in mode {args.mode}")
 
     with open(args.config, "r", encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
     cfg["mode"] = args.mode
 
     whitelist = fetch_and_filter_pairs(cfg)
-    logging.info(f"🎯 Финальный whitelist: {whitelist}")
+    logging.info(f"Final whitelist: {whitelist}")
 
-# Поддержка запуска через `python -m bot_ai.selector.pipeline`
-if __name__ == "__main__" or __name__.endswith(".pipeline"):
+
+if __name__ == "__main__":
     main()

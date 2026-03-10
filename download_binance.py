@@ -1,9 +1,9 @@
 # ============================================
 # File: download_binance.py
-# Назначение: Скачивание исторических свечей с Binance
-# Источник: https://api.binance.com/api/v3/klines
-# Загружает пары из data/whitelist.json
-# Сохраняет в data/history/<SYMBOL>_<TIMEFRAME>.csv
+# Purpose: Download historical candlestick data from Binance
+# Source: https://api.binance.com/api/v3/klines
+# Loads symbols from data/whitelist.json
+# Saves to data/history/<SYMBOL>_<TIMEFRAME>.csv
 # ============================================
 
 import os
@@ -13,8 +13,8 @@ import requests
 import pandas as pd
 from datetime import datetime, timedelta
 
-# === Настройки ===
-TIMEFRAME = "15m"
+# === Settings ===
+TIMEFRAMES = ["1h", "15m"]
 DAYS_BACK = 90
 OUTPUT_DIR = "data/history"
 WHITELIST_PATH = "data/whitelist.json"
@@ -22,8 +22,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # === Binance REST API ===
 BASE_URL = "https://api.binance.com/api/v3/klines"
-INTERVAL = TIMEFRAME
-LIMIT = 1000  # макс. за 1 запрос
+LIMIT = 1000
 
 def load_whitelist():
     with open(WHITELIST_PATH, "r", encoding="utf-8") as f:
@@ -41,7 +40,7 @@ def download_klines(symbol, interval, start_time_ms, end_time_ms):
         }
         response = requests.get(BASE_URL, params=params)
         if response.status_code != 200:
-            print(f"❌ Ошибка {symbol}: {response.status_code} {response.text}")
+            print(f"❌ Error {symbol} [{interval}]: {response.status_code} {response.text}")
             break
 
         data = response.json()
@@ -51,11 +50,10 @@ def download_klines(symbol, interval, start_time_ms, end_time_ms):
         all_klines.extend(data)
         last_time = data[-1][0]
         start_time_ms = last_time + 1
-        time.sleep(0.2)  # антиспам
-
+        time.sleep(0.2)
     return all_klines
 
-def save_klines(symbol, klines):
+def save_klines(symbol, klines, interval):
     df = pd.DataFrame(klines, columns=[
         "time", "open", "high", "low", "close", "volume",
         "close_time", "quote_asset_volume", "number_of_trades",
@@ -66,25 +64,27 @@ def save_klines(symbol, klines):
     for col in ["open", "high", "low", "close", "volume"]:
         df[col] = df[col].astype(float)
 
-    out_path = os.path.join(OUTPUT_DIR, f"{symbol}_{TIMEFRAME}.csv")
+    out_path = os.path.join(OUTPUT_DIR, f"{symbol}_{interval}.csv")
     df.to_csv(out_path, index=False)
-    print(f"✅ Сохранено: {out_path}")
+    print(f"✅ Saved: {out_path}")
 
 def main():
-    symbols = load_whitelist()
+    entries = load_whitelist()
     end_time = int(time.time() * 1000)
     start_time = int((datetime.utcnow() - timedelta(days=DAYS_BACK)).timestamp() * 1000)
 
-    for symbol in symbols:
-        try:
-            print(f"⬇️ Загрузка: {symbol}")
-            klines = download_klines(symbol, INTERVAL, start_time, end_time)
-            if klines:
-                save_klines(symbol, klines)
-            else:
-                print(f"⚠️ Нет данных для {symbol}")
-        except Exception as e:
-            print(f"❌ Ошибка {symbol}: {e}")
+    for entry in entries:
+        symbol = entry["symbol"]
+        for interval in TIMEFRAMES:
+            try:
+                print(f"⬇️ Downloading: {symbol} | {interval}")
+                klines = download_klines(symbol, interval, start_time, end_time)
+                if klines:
+                    save_klines(symbol, klines, interval)
+                else:
+                    print(f"⚠️ No data for {symbol} [{interval}]")
+            except Exception as e:
+                print(f"❌ Error {symbol} [{interval}]: {e}")
 
 if __name__ == "__main__":
     main()
