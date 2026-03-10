@@ -51,3 +51,146 @@ def load_data(symbol: str, interval: str, limit: int = 100) -> pd.DataFrame:
         print(f"Р В Р вЂ Р РЋРЎС™Р В Р вЂ° Р В Р’В Р РЋРІР‚С”Р В Р Р‹Р Р†РІР‚С™Р’В¬Р В Р’В Р РЋРІР‚ВР В Р’В Р вЂ™Р’В±Р В Р’В Р РЋРІР‚СњР В Р’В Р вЂ™Р’В° Р В Р’В Р РЋРІР‚вЂќР В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚В Р В Р’В Р вЂ™Р’В·Р В Р’В Р вЂ™Р’В°Р В Р’В Р РЋРІР‚вЂњР В Р Р‹Р В РІР‚С™Р В Р Р‹Р РЋРІР‚СљР В Р’В Р вЂ™Р’В·Р В Р’В Р РЋРІР‚СњР В Р’В Р вЂ™Р’Вµ Р В Р’В Р СћРІР‚ВР В Р’В Р вЂ™Р’В°Р В Р’В Р В РІР‚В¦Р В Р’В Р В РІР‚В¦Р В Р Р‹Р Р†Р вЂљРІвЂћвЂ“Р В Р Р‹Р Р†Р вЂљР’В¦ Р В Р’В Р СћРІР‚ВР В Р’В Р вЂ™Р’В»Р В Р Р‹Р В Р РЏ {symbol}: {e}")
         return pd.DataFrame()
 
+# -*- coding: utf-8 -*-
+# ============================================
+# File: bot_ai/data_loader.py
+# Purpose: Unified OHLCV loader with caching
+# Format: UTF-8 without BOM
+# ============================================
+
+import pandas as pd
+import os
+
+CACHE_DIR = "cache"
+os.makedirs(CACHE_DIR, exist_ok=True)
+
+def load_data(pair: str, interval: str, limit: int = 500):
+    """
+    Loads OHLCV data from CSV cache.
+    Expected columns: time, open, high, low, close, volume.
+    Returns empty DataFrame if file missing or corrupted.
+    """
+    path = os.path.join(CACHE_DIR, f"{pair}_{interval}.csv")
+
+    if not os.path.isfile(path):
+        return pd.DataFrame()
+
+    try:
+        df = pd.read_csv(path)
+        df = df.tail(limit)
+        return df
+    except Exception:
+        return pd.DataFrame()
+# -*- coding: utf-8 -*-
+# ============================================
+# File: bot_ai/data_loader.py
+# Purpose: Unified Binance OHLCV loader
+# Format: UTF-8 without BOM
+# ============================================
+
+import pandas as pd
+from binance.client import Client
+from bot_ai.config.config_loader import get_binance_credentials
+
+# Load Binance credentials
+api_key, api_secret = get_binance_credentials()
+client = Client(api_key, api_secret)
+
+
+def load_data(symbol: str, interval: str, limit: int = 100) -> pd.DataFrame:
+    """
+    Loads OHLCV data from Binance and returns a clean DataFrame.
+    Columns: time, open, high, low, close, volume
+    """
+
+    try:
+        # Fetch raw klines
+        klines = client.get_klines(symbol=symbol, interval=interval, limit=limit)
+
+        # Convert to DataFrame
+        df = pd.DataFrame(klines, columns=[
+            "timestamp", "open", "high", "low", "close", "volume",
+            "close_time", "quote_asset_volume", "number_of_trades",
+            "taker_buy_base_volume", "taker_buy_quote_volume", "ignore"
+        ])
+
+        # Convert timestamp
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+
+        # Keep only required columns
+        df = df[["timestamp", "open", "high", "low", "close", "volume"]]
+
+        # Convert numeric columns
+        df = df.astype({
+            "open": "float",
+            "high": "float",
+            "low": "float",
+            "close": "float",
+            "volume": "float"
+        })
+
+        # Rename timestamp → time
+        df.rename(columns={"timestamp": "time"}, inplace=True)
+
+        return df
+
+    except Exception as e:
+        print(f"[data_loader] Error loading {symbol}: {e}")
+        return pd.DataFrame()
+# -*- coding: utf-8 -*-
+# ============================================
+# File: bot_ai/data_loader.py
+# Purpose: Unified Binance OHLCV loader
+# Format: UTF-8 without BOM
+# ============================================
+
+import pandas as pd
+from binance.client import Client
+from bot_ai.config.config_loader import get_binance_credentials
+
+
+# Load Binance credentials
+api_key, api_secret = get_binance_credentials()
+client = Client(api_key, api_secret)
+
+
+def load_data(symbol: str, interval: str, limit: int = 100) -> pd.DataFrame:
+    """
+    Loads OHLCV data from Binance and returns a clean DataFrame.
+    Columns: time, open, high, low, close, volume
+    """
+
+    try:
+        # Fetch raw klines
+        klines = client.get_klines(symbol=symbol, interval=interval, limit=limit)
+
+        # Convert to DataFrame
+        df = pd.DataFrame(klines, columns=[
+            "timestamp", "open", "high", "low", "close", "volume",
+            "close_time", "quote_asset_volume", "number_of_trades",
+            "taker_buy_base_volume", "taker_buy_quote_volume", "ignore"
+        ])
+
+        # Convert timestamp
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+
+        # Keep only required columns
+        df = df[["timestamp", "open", "high", "low", "close", "volume"]]
+
+        # Convert numeric columns
+        df = df.astype({
+            "open": "float",
+            "high": "float",
+            "low": "float",
+            "close": "float",
+            "volume": "float"
+        })
+
+        # Rename timestamp → time
+        df.rename(columns={"timestamp": "time"}, inplace=True)
+
+        return df
+
+    except Exception as e:
+        print(f"[data_loader] Error loading {symbol}: {e}")
+        return pd.DataFrame()

@@ -1,28 +1,25 @@
 # ============================================
 # File: bot_ai/utils/portfolio_report.py
-# Purpose: Portfolio snapshot with FIFO-based buy breakdown and PnL
+# Purpose: Accurate FIFO-based portfolio report with commission-aware investment tracking
 # Supports: --env main | test
 # Requires: pip install python-binance python-dotenv
 # ============================================
 
 import os
 import argparse
-from decimal import Decimal, ROUND_DOWN
+from decimal import Decimal
 from datetime import datetime
 from binance.client import Client
 from dotenv import load_dotenv
 
-# Load .env variables
 load_dotenv()
 
-# Select API keys
 def get_api_keys(env):
     if env == "test":
         return os.getenv("BINANCE_TESTNET_API_KEY"), os.getenv("BINANCE_TESTNET_API_SECRET")
     else:
         return os.getenv("BINANCE_API_KEY"), os.getenv("BINANCE_API_SECRET")
 
-# Get current market price
 def get_current_price(client, symbol):
     try:
         ticker = client.get_symbol_ticker(symbol=symbol)
@@ -30,7 +27,9 @@ def get_current_price(client, symbol):
     except:
         return None
 
-# Main logic
+def format_time(ms):
+    return datetime.utcfromtimestamp(ms / 1000).strftime("%Y-%m-%d %H:%M")
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--env", choices=["main", "test"], default="main", help="Environment: main or test")
@@ -46,13 +45,13 @@ def main():
         client.API_URL = "https://testnet.binance.vision/api"
 
     account = client.get_account()
-    balances = [b for b in account["balances"] if float(b["free"]) > 0 or float(b["locked"]) > 0]
+    balances = {b["asset"]: Decimal(b["free"]) + Decimal(b["locked"]) for b in account["balances"]}
 
     print(f"\n📦 Portfolio Snapshot ({args.env.upper()}):\n")
 
-    for b in balances:
-        asset = b["asset"]
-        qty = Decimal(b["free"]) + Decimal(b["locked"])
+    total_portfolio_cost = Decimal("0")
+
+    for asset, qty in balances.items():
         if asset == "USDT" or qty == 0:
             continue
 
@@ -62,41 +61,54 @@ def main():
         except:
             continue
 
-        # Sort trades by time (FIFO)
-        buy_trades = [t for t in trades if t["isBuyer"]]
-        buy_trades.sort(key=lambda x: x["time"])
-
-        remaining_qty = qty
-        fifo_lots = []
-        total_cost = Decimal("0")
-        total_qty = Decimal("0")
-
-        for t in buy_trades:
-            price = Decimal(t["price"])
+        trades.sort(key=lambda x: x["time"])
+        fifo_queue = []
+        for t in trades:
             t_qty = Decimal(t["qty"])
-            if remaining_qty <= 0:
-                break
-            used_qty = min(remaining_qty, t_qty)
-            fifo_lots.append((used_qty, price))
-            total_cost += used_qty * price
-            total_qty += used_qty
-            remaining_qty -= used_qty
+            t_price = Decimal(t["price"])
+            t_time = format_time(t["time"])
+            t_id = t["id"]
+            commission = Decimal(t["commission"])
+            commission_asset = t["commissionAsset"]
 
-        if total_qty == 0:
+            if t["isBuyer"]:
+                net_qty = t_qty
+                if commission_asset == asset:
+                    net_qty -= commission
+                fifo_queue.append({"qty": net_qty, "price": t_price, "time": t_time, "id": t_id})
+            else:
+                sell_qty = t_qty
+                if commission_asset == asset:
+                    sell_qty += commission
+                while sell_qty > 0 and fifo_queue:
+                    lot = fifo_queue[0]
+                    if lot["qty"] <= sell_qty:
+                        sell_qty -= lot["qty"]
+                        fifo_queue.pop(0)
+                    else:
+                        lot["qty"] -= sell_qty
+                        sell_qty = Decimal("0")
+
+        if not fifo_queue:
             continue
 
+        total_cost = sum(lot["qty"] * lot["price"] for lot in fifo_queue)
+        total_qty = sum(lot["qty"] for lot in fifo_queue)
         avg_price = (total_cost / total_qty).quantize(Decimal("0.0001"))
         current_price = get_current_price(client, symbol)
         if current_price is None:
             continue
-
         pnl_pct = ((current_price - avg_price) / avg_price * 100).quantize(Decimal("0.01"))
 
-        print(f"{asset} | Total: {qty:.6f} | Avg Buy: {avg_price:.4f} | Now: {current_price:.4f} | PnL: {pnl_pct:+.2f}%")
-        print("  Breakdown (remaining lots only):")
-        for amount, price in fifo_lots:
-            print(f"    {amount:.6f} @ {price:.4f}")
-        print("")
+        print(f"{symbol} | Balance: {total_qty:.6f} | Avg Buy: {avg_price:.4f} | Now: {current_price:.4f} | PnL: {pnl_pct:+.2f}%")
+        print("  FIFO breakdown:")
+        for lot in fifo_queue:
+            print(f"    {lot['qty']:.6f} @ {lot['price']:.4f} | {lot['time']} | ID: {lot['id']}")
+        print(f"  ➤ Invested in {symbol}: {total_cost:.2f} USDT\n")
+
+        total_portfolio_cost += total_cost
+
+    print(f"💰 Total invested (FIFO-based, net of commissions): {total_portfolio_cost:.2f} USDT")
 
 if __name__ == "__main__":
     main()

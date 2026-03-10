@@ -29,3 +29,27 @@ def load_strategy(name: str):
         raise ValueError(f"Strategy not found in catalog: {name}")
     module = importlib.import_module(meta["module"])
     return getattr(module, meta["class"])
+# -*- coding: utf-8 -*-
+# ============================================
+# File: bot_ai/strategy/strategy_loader.py
+# Purpose: Dynamic strategy loader for multi-strategy engine
+# Format: UTF-8 without BOM
+# ============================================
+
+from bot_ai.strategy.rsi_reversal_strategy import rsi_reversal_strategy
+from bot_ai.strategy.mean_reversion import mean_reversion_strategy
+from bot_ai.strategy.breakout import breakout_strategy
+
+STRATEGY_MAP = {
+    "rsi_reversal": rsi_reversal_strategy,
+    "mean_reversion": mean_reversion_strategy,
+    "breakout": breakout_strategy
+}
+
+def load_strategy(name: str):
+    """
+    Returns strategy class by name.
+    """
+    if name not in STRATEGY_MAP:
+        raise ValueError(f"Strategy not found: {name}")
+    return STRATEGY_MAP[name]

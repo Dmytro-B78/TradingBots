@@ -53,3 +53,69 @@ def get_active_symbols(pairs: list, config: dict) -> list:
 
     return active
 
+# -*- coding: utf-8 -*-
+"""
+pipeline_full.py — extended pipeline for selecting active trading pairs.
+
+Responsibilities:
+- load OHLCV data
+- apply volume filter
+- apply risk filter
+- detect trend
+- choose strategy for each pair
+"""
+
+from selector.filters import volume_ok, trend_ok, riskguard_ok
+from selector.trend_utils import is_trending
+from bot_ai.data_loader import load_data
+
+DEFAULT_INTERVAL = "1h"
+DEFAULT_QTY = 0.01
+
+def choose_strategy(df, config) -> str:
+    """
+    Strategy selection logic:
+    - if trending → ma_crossover
+    - else → rsi_reversal
+    """
+    if trend_ok(df, config):
+        return "ma_crossover"
+    return "rsi_reversal"
+
+def get_active_symbols(pairs: list, config: dict) -> list:
+    """
+    Select active trading pairs:
+    - load OHLCV
+    - apply volume filter
+    - apply risk filter
+    - choose strategy
+    """
+    active = []
+
+    for pair in pairs:
+        df = load_data(pair, DEFAULT_INTERVAL, limit=100)
+        if df is None or len(df) < 50:
+            continue
+
+        # === Volume filter ===
+        if not volume_ok(df, config):
+            print(f"[FILTER:volume] Skip {pair}")
+            continue
+
+        # === Risk filter ===
+        if not riskguard_ok(pair, config):
+            print(f"[FILTER:risk] Skip {pair}")
+            continue
+
+        # === Strategy selection ===
+        strategy = choose_strategy(df, config)
+        print(f"[SELECTOR] {pair} -> strategy: {strategy}")
+
+        active.append({
+            "pair": pair,
+            "strategy": strategy,
+            "interval": DEFAULT_INTERVAL,
+            "qty": DEFAULT_QTY
+        })
+
+    return active

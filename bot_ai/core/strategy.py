@@ -7,11 +7,10 @@
 import pandas as pd
 
 class Strategy:
-    def __init__(self, df: pd.DataFrame, config: dict, mode: str = "backtest"):
-        self.df = df.copy()
-        self.config = config
+    def __init__(self, config: dict = None, mode: str = "backtest"):
+        self.config = config or {}
         self.mode = mode
-        self.df["signal"] = 0
+        self.df = pd.DataFrame()
 
     def generate_signals(self):
         raise NotImplementedError("generate_signals() must be implemented in subclass.")
