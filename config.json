@@ -1,86 +1,52 @@
 {
-  "mode": "paper",
-  "capital": 1000,
-  "risk_per_trade": 0.01,
-  "stop_loss_pct": 0.01,
-  "min_risk_reward_ratio": 1.5,
-  "max_holding_period": 24,
-  "trailing_stop_pct": 0.015,
-  "take_profit_pct": 0.02,
-  "timeframes": [
-    "15m",
-    "1h",
-    "4h"
-  ],
-  "lookback_candles": 150,
-  "exchange": {
-    "name": "binance",
-    "testnet": true
-  },
-  "risk": {
-    "min_24h_volume_usdt": 50000,
-    "max_spread_pct": 2.0,
-    "min_volatility": 0.0015,
-    "top_n_pairs": 20
-  },
-  "backtest": {
-    "timeframe": "1h",
-    "lookback_bars": 200
-  },
-  "optimize": {
-    "sma_fast_range": [
-      5,
-      10,
-      15
-    ],
-    "sma_slow_range": [
-      20,
-      30,
-      40
-    ],
-    "rsi_period_range": [
-      10,
-      14,
-      20
-    ],
-    "breakout_window_range": [
-      5,
-      10,
-      15,
-      20,
-      25,
-      30
-    ]
-  },
-  "params": {
-    "window": 10,
-    "rsi_period": 14,
-    "rsi_oversold": 30,
-    "rsi_overbought": 70,
-    "trailing_stop_pct": 0.015,
-    "take_profit_pct": 0.02,
-    "max_holding_period": 24
-  },
-  "compare": {
-    "strategies": [
-      "breakout",
-      "mean_reversion"
-    ]
-  },
-  "symbols": [
-    {
-      "pair": "BTCUSDT",
-      "strategy": "volatile",
-      "interval": "1h",
-      "qty": 0.001
+    "allow_live_trading": false,
+    "dry_run": true,
+
+    "meta_strategy": {
+        "cooldown": 3,
+        "trend_period": 50,
+        "atr_period": 14,
+        "min_atr": 0.1,
+        "sl_mult": 1.5,
+        "tp_mult": 3.0
     },
-    {
-      "pair": "ETHUSDT",
-      "strategy": "volatile",
-      "interval": "1h",
-      "qty": 0.01
+
+    "ma_crossover": {
+        "short": 9,
+        "long": 21,
+        "type": "EMA",
+        "trend_period": 50,
+        "atr_period": 14,
+        "min_atr": 0.1,
+        "cooldown": 3
+    },
+
+    "rsi": {
+        "period": 14,
+        "buy": 30,
+        "sell": 70,
+        "trend_period": 50,
+        "atr_period": 14,
+        "min_atr": 0.1,
+        "cooldown": 3
+    },
+
+    "macd": {
+        "fast": 12,
+        "slow": 26,
+        "signal": 9,
+        "trend_period": 50,
+        "atr_period": 14,
+        "min_atr": 0.1,
+        "cooldown": 3
+    },
+
+    "bollinger": {
+        "period": 20,
+        "mult": 2.0,
+        "trend_period": 50,
+        "atr_period": 14,
+        "min_atr": 0.1,
+        "cooldown": 3
     }
-  ],
-  "strategy_config": "bot_ai/config/volatile.json",
-  "log_path": "C:/TradingBots/NT/trades_log.csv"
 }
