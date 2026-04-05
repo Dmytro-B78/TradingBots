@@ -1,110 +1,514 @@
-# 📘 Diploma Project: Lightweight Trading Bot (RSI Strategy)
+# ================================================================
+# NT-Tech Trading Engine 3.0 (Spot Only, Long Only)
+# ASCII-only
+# ================================================================
 
-## Purpose
+A modular, deterministic, ASCII-only trading engine designed for Spot-only algorithmic trading.  
+The system follows strict NT-Tech Mode rules and provides a complete pipeline for:
 
-This is a simplified version of a crypto trading bot developed for academic purposes. It focuses on a single strategy — **RSI Reversal** — and supports both backtesting and live trading modes using the Binance API.
+- Backtesting (BacktestEngine 3.0)
+- Live trading (LiveEngine 3.0, Binance API)
+- Strict Mode C execution safety
+- Market scanning (USDT pairs, volume filter >= 50M)
+- MetaStrategy 2.2 (ATR-based SL/TP, trend filters)
+- Real-time execution engine
+- Dry-run mode for safe testing
+- Deterministic logging (FileLogger 3.0)
+- Error-safe operation
 
-The full-featured version of the bot (with multiple strategies and extended functionality) is maintained in the `main` branch. This version, located in the `diploma` branch, is optimized for demonstration and documentation in a diploma project.
+All modules follow NT-Tech Mode:
+- ASCII-only
+- Full-file PowerShell blocks
+- No variables
+- No Cyrillic
+- Deterministic formatting
+- Ready for direct execution
 
----
-
-## Project Structure
+------------------------------------------------
+Directory Structure
+------------------------------------------------
 
 C:\TradingBots\NT\
-├── main.py                     # Entry point for backtest/live execution
-├── config.json                 # Strategy and risk configuration
-├── data\                       # Historical OHLCV data (CSV)
-├── logs\                       # Auto-generated logs (signals, orders, balances)
+│   main.py
+│   config.json
+│   README.md
+│   CHANGELOG.md
+│
 ├── bot_ai\
-│   ├── core\
-│   │   ├── strategy.py         # Base Strategy class
-│   │   └── order_manager.py    # OrderManager with test/live mode
-│   ├── strategy\
-│   │   └── rsi_reversal_strategy.py  # RSI-based trading logic
-│   ├── utils\
-│   │   ├── logger.py           # Signal logging
-│   │   └── indicators.py       # RSI, SMA, EMA, ATR
-│   └── metrics.py              # Performance metrics (Sharpe, drawdown, etc.)
+│   ├── config\
+│   │     config.py
+│   │
+│   └── engine\
+│         backtest_engine.py
+│         live_engine.py
+│         data_loader.py
+│         file_logger.py
+│         utils.py
+│         risk_manager.py (stub)
+│         strategy_router.py
+│         config_loader.py
+│         trade_analyzer.py
+│         __init__.py
+│
+└── bot_ai\
+    └── strategy\
+          meta_strategy.py
+          ma_crossover_strategy.py
+          rsi_strategy.py
+          macd_strategy.py
+          bollinger_strategy.py
 
----
+------------------------------------------------
+Core Components
+------------------------------------------------
 
-## Installation
+MetaStrategy 2.2
+- Long-only strategy engine
+- ATR-based SL/TP
+- Trend filters
+- Signal model:
+    OPEN_LONG
+    CLOSE_LONG
+- Fully compatible with BacktestEngine 3.0 and LiveEngine 3.0
 
-Install dependencies:
+Backtest Engine 3.0
+- Spot-only, Long-only
+- ATR SL/TP integration
+- Deterministic candle ordering
+- Equity curve
+- Sharpe ratio
+- Max drawdown
+- Trade log
+- ASCII-only output
+- No short positions
+- No OrderEngine
+- No RiskManager
 
-    pip install -r requirements.txt
+Live Engine 3.0 (Strict Mode C, Binance API)
+- Official binance-connector client
+- Market scanner (USDT pairs, volume >= 50M)
+- Real-time price feed
+- Market buy/sell execution
+- Long-only
+- Position sizing by percentage of USDT balance
+- ATR SL/TP enforcement
+- Dry-run mode
+- Strict Mode C safety:
+    * allow_live_trading is loaded ONLY from config.json
+    * dry_run can be overridden from scripts
+    * real trading requires BOTH:
+        allow_live_trading = true
+        dry_run = false
+    * fail-safe blocks all real orders if allow_live_trading=false
+- FileLogger 3.0 integration
+- Error-safe loop with auto-recovery
 
----
+FileLogger 3.0
+- ASCII-only logging
+- Deterministic rotation
+- Unified log format for all engines
 
-## Usage
+Risk Manager (Deprecated)
+- RiskManager is removed from architecture
+- A stub file remains for backward compatibility
+- All risk logic is now handled by:
+    MetaStrategy 2.2
+    BacktestEngine 3.0
+    LiveEngine 3.0
 
-### Backtest
+Indicators
+- SMA, EMA, WMA, HMA
+- RSI
+- ATR
+- Trend filters
+- All indicators are pure functions
 
-    python main.py --mode backtest --strategy rsi --symbol BTCUSDT --timeframe 1h --balance 1000
+Utilities (Utils 3.0)
+- Safe numeric conversions
+- ASCII sanitization
+- Deterministic formatting
+- clamp(), round_smart(), to_ascii()
 
-Requires historical data file:
+------------------------------------------------
+Configuration File (config.json)
+------------------------------------------------
 
-    data/BTCUSDT_1h.csv
+Example:
 
-### Live Trading (Simulated)
+{
+    "allow_live_trading": false,
+    "dry_run": true,
 
-Set Binance API keys in `.env`:
+    "meta_strategy": {
+        "cooldown": 3,
+        "trend_period": 50,
+        "atr_period": 14,
+        "min_atr": 0.1,
+        "sl_mult": 1.5,
+        "tp_mult": 3.0
+    },
 
-    BINANCE_API_KEY=your_api_key
-    BINANCE_API_SECRET=your_api_secret
+    "strategies": {
+        "ma_crossover": {
+            "short_period": 10,
+            "long_period": 30
+        }
+    }
+}
 
-Then run:
+Strict Mode C rules:
+- allow_live_trading is the master kill-switch
+- allow_live_trading cannot be overridden by scripts
+- dry_run can be overridden by scripts
+- real trading requires BOTH:
+    allow_live_trading = true
+    dry_run = false
 
-    python main.py --mode live --strategy rsi --symbol BTCUSDT --timeframe 1h --balance 1000
+------------------------------------------------
+Running Backtests
+------------------------------------------------
 
----
+python - << "EOF"
+from bot_ai.engine.backtest_engine import BacktestEngine
+from bot_ai.engine.config_loader import ConfigLoader
+from bot_ai.engine.data_loader import DataLoader
 
-## Output
+config = ConfigLoader.load_from_json("config.json")
+candles = DataLoader.load("candles.json")
 
-- Signals: logs/{symbol}_signals.csv
-- Orders: logs/{symbol}_orders.csv
-- Balance: logs/{symbol}_balance.csv
-- Metrics (backtest): printed to console
+engine = BacktestEngine(config, candles)
+result = engine.run()
+print(result)
+EOF
 
----
+------------------------------------------------
+Running Live Trading (Strict Mode C)
+------------------------------------------------
 
-## Notes
+python - << "EOF"
+from bot_ai.engine.live_engine import LiveEngine
+from bot_ai.engine.config_loader import ConfigLoader
 
-- Only RSIReversalStrategy is active in this version
-- Other strategies are present in the codebase but not used in the diploma branch
-- All orders in live mode are simulated unless test_mode=False
-## 📘 Strategy Modules Overview
+config = ConfigLoader.load_from_json("config.json")
 
-This section documents the core trading strategies implemented in the `bot_ai/strategy/` directory. Each strategy inherits from the base `Strategy` class and supports both backtesting and live trading modes with integrated logging and database storage.
+engine = LiveEngine(
+    config=config,
+    position_pct=0.25,
+    min_volume=50000000,
+    dry_run=False
+)
 
-### Strategies
+engine.run()
+EOF
 
-| Strategy              | Description                                      | Key Parameters                          |
-|-----------------------|--------------------------------------------------|------------------------------------------|
-| `RSIReversalStrategy` | Reversal strategy based on RSI oversold/overbought levels | `rsi_period`, `rsi_oversold`, `rsi_overbought`, `take_profit_pct`, `trailing_stop_pct`, `max_holding_period` |
-| `BreakoutStrategy`    | Breakout strategy using rolling high/low levels  | `lookback`, `take_profit_pct`, `stop_loss_pct`, `max_holding_period` |
-| `MeanReversionStrategy` | Mean reversion strategy based on SMA deviation | `window`, `threshold`, `max_holding_period` |
+------------------------------------------------
+Dry-Run Mode (Safe Testing)
+------------------------------------------------
 
-### Shared Features
+python - << "EOF"
+from bot_ai.engine.live_engine import LiveEngine
+from bot_ai.engine.config_loader import ConfigLoader
 
-- All strategies support:
-  - `generate_signal(df)` for live mode
-  - `generate_signals(df)` for backtesting
-  - `backtest(df)` with fee and equity tracking
-  - `summary(symbol)` to return trade history
-- Signals are logged via `log_signal()`
-- Trades are stored in SQLite via `insert_trade()`
+config = ConfigLoader.load_from_json("config.json")
 
-### File Structure
+engine = LiveEngine(
+    config=config,
+    position_pct=0.25,
+    min_volume=50000000,
+    dry_run=True
+)
 
-bot_ai/
-├── core/
-│   ├── signal.py         # Signal class
-│   └── strategy.py       # Base Strategy class
-├── strategy/
-│   ├── rsi_reversal_strategy.py
-│   ├── breakout.py
-│   └── mean_reversion.py
-├── utils/
-│   └── logger.py         # log_signal()
-└── db.py                 # SQLite integration
+engine.run()
+EOF
+
+------------------------------------------------
+Logs
+------------------------------------------------
+
+All logs are written to:
+C:/TradingBots/NT/logs/live_log.txt
+
+Includes:
+- OPEN_LONG events
+- CLOSE_LONG events
+- SL/TP triggers
+- Fail-safe blocks
+- Errors and stack traces
+- Market scanner selections
+
+------------------------------------------------
+NT-Tech Mode Rules
+------------------------------------------------
+
+- ASCII-only
+- Full-file PowerShell blocks
+- No variables
+- No Cyrillic
+- Deterministic formatting
+- Ready for direct execution
+- All updates delivered as Set-Content blocks
+
+------------------------------------------------
+End of README
+------------------------------------------------
+# ================================================================
+# NT-Tech Trading Engine 3.0 (Spot Only, Long Only)
+# ASCII-only
+# ================================================================
+
+A modular, deterministic, ASCII-only trading engine designed for Spot-only algorithmic trading.
+The system follows strict NT-Tech Mode rules and provides a complete pipeline for:
+
+- Ultra-fast backtesting (2,000,000+ candles/sec)
+- Live trading (LiveEngine 3.0, Binance API)
+- Strict Mode C execution safety
+- Market scanning (USDT pairs, volume filter >= 50M)
+- MetaStrategy 2.6 (incremental trend + ATR filters)
+- Strategy Suite 3.1 (MACD, MA, RSI, Bollinger — all O(1))
+- Real-time execution engine
+- Dry-run mode for safe testing
+- Deterministic logging (FileLogger 3.0)
+- Error-safe operation
+
+All modules follow NT-Tech Mode:
+- ASCII-only
+- Full-file PowerShell blocks
+- No Cyrillic
+- Deterministic formatting
+- Ready for direct execution
+
+------------------------------------------------
+Directory Structure
+------------------------------------------------
+
+C:\TradingBots\NT\
+│   main.py
+│   config.json
+│   README.md
+│   CHANGELOG.md
+│
+├── bot_ai\
+│   ├── config\
+│   │     config.py
+│   │
+│   └── engine\
+│         backtest_engine.py
+│         live_engine.py
+│         data_loader.py
+│         file_logger.py
+│         utils.py
+│         risk_manager.py (stub)
+│         strategy_router.py
+│         config_loader.py
+│         trade_analyzer.py
+│         __init__.py
+│
+└── bot_ai\
+    └── strategy\
+          meta_strategy.py (MetaStrategy 2.6)
+          ma_crossover_strategy.py (3.1)
+          rsi_strategy.py (3.1)
+          macd_strategy.py (3.1)
+          bollinger_strategy.py (3.1)
+
+------------------------------------------------
+Core Components
+------------------------------------------------
+
+MetaStrategy 2.6
+- Centralized filtering engine
+- Incremental trend EMA (O(1))
+- Incremental ATR (O(1))
+- Trend slope filter
+- ATR slope filter
+- Volatility ratio filter
+- Long-only signal model:
+    OPEN_LONG
+    CLOSE_LONG
+- All sub-strategies are pure signal generators
+- No indicator recalculation
+- 2M+ candles/sec performance
+
+Strategy Suite 3.1
+- MACDStrategy 3.1 (incremental MACD)
+- MACrossoverStrategy 3.1 (incremental EMA/SMA)
+- BollingerStrategy 3.1 (incremental SMA + variance)
+- RSIStrategy 3.1 (incremental RSI)
+- All strategies:
+    * No ATR filters
+    * No trend filters
+    * No IndicatorsAdvanced calls
+    * O(1) per candle
+    * Fully compatible with MetaStrategy 2.6
+
+Backtest Engine 3.0
+- Spot-only, Long-only
+- Deterministic candle ordering
+- Equity curve
+- Sharpe ratio
+- Max drawdown
+- Trade log
+- ASCII-only output
+- No short positions
+- No OrderEngine
+- No RiskManager
+
+Live Engine 3.0 (Strict Mode C, Binance API)
+- Official binance-connector client
+- Market scanner (USDT pairs, volume >= 50M)
+- Real-time price feed
+- Market buy/sell execution
+- Long-only
+- Position sizing by percentage of USDT balance
+- ATR SL/TP enforcement
+- Dry-run mode
+- Strict Mode C safety:
+    * allow_live_trading is loaded ONLY from config.json
+    * dry_run can be overridden from scripts
+    * real trading requires BOTH:
+        allow_live_trading = true
+        dry_run = false
+    * fail-safe blocks all real orders if allow_live_trading=false
+- FileLogger 3.0 integration
+- Error-safe loop with auto-recovery
+
+FileLogger 3.0
+- ASCII-only logging
+- Deterministic rotation
+- Unified log format for all engines
+
+Indicators (Advanced 3.x)
+- SMA, EMA, WMA, HMA
+- RSI
+- ATR
+- Trend filters
+- All indicators are pure functions
+- No strategy depends on IndicatorsAdvanced
+
+Utilities (Utils 3.0)
+- Safe numeric conversions
+- ASCII sanitization
+- Deterministic formatting
+- clamp(), round_smart(), to_ascii()
+
+------------------------------------------------
+Configuration File (config.json)
+------------------------------------------------
+
+Example:
+
+{
+    "allow_live_trading": false,
+    "dry_run": true,
+
+    "meta_strategy": {
+        "cooldown": 3,
+        "trend_period": 50,
+        "atr_period": 14,
+        "min_atr": 0.1,
+        "min_slope": 0.0,
+        "min_volatility_ratio": 0.0005
+    },
+
+    "strategies": {
+        "ma_crossover": {
+            "short": 10,
+            "long": 30
+        }
+    }
+}
+
+Strict Mode C rules:
+- allow_live_trading is the master kill-switch
+- allow_live_trading cannot be overridden by scripts
+- dry_run can be overridden by scripts
+- real trading requires BOTH:
+    allow_live_trading = true
+    dry_run = false
+
+------------------------------------------------
+Running Backtests
+------------------------------------------------
+
+python - << "EOF"
+from bot_ai.engine.backtest_engine import BacktestEngine
+from bot_ai.engine.config_loader import ConfigLoader
+from bot_ai.engine.data_loader import DataLoader
+
+config = ConfigLoader.load_from_json("config.json")
+candles = DataLoader.load("candles.json")
+
+engine = BacktestEngine(config, candles)
+result = engine.run()
+print(result)
+EOF
+
+------------------------------------------------
+Running Live Trading (Strict Mode C)
+------------------------------------------------
+
+python - << "EOF"
+from bot_ai.engine.live_engine import LiveEngine
+from bot_ai.engine.config_loader import ConfigLoader
+
+config = ConfigLoader.load_from_json("config.json")
+
+engine = LiveEngine(
+    config=config,
+    position_pct=0.25,
+    min_volume=50000000,
+    dry_run=False
+)
+
+engine.run()
+EOF
+
+------------------------------------------------
+Dry-Run Mode (Safe Testing)
+------------------------------------------------
+
+python - << "EOF"
+from bot_ai.engine.live_engine import LiveEngine
+from bot_ai.engine.config_loader import ConfigLoader
+
+config = ConfigLoader.load_from_json("config.json")
+
+engine = LiveEngine(
+    config=config,
+    position_pct=0.25,
+    min_volume=50000000,
+    dry_run=True
+)
+
+engine.run()
+EOF
+
+------------------------------------------------
+Logs
+------------------------------------------------
+
+All logs are written to:
+C:/TradingBots/NT/logs/live_log.txt
+
+Includes:
+- OPEN_LONG events
+- CLOSE_LONG events
+- SL/TP triggers
+- Fail-safe blocks
+- Errors and stack traces
+- Market scanner selections
+
+------------------------------------------------
+NT-Tech Mode Rules
+------------------------------------------------
+
+- ASCII-only
+- Full-file PowerShell blocks
+- No Cyrillic
+- Deterministic formatting
+- Ready for direct execution
+- All updates delivered as Set-Content blocks
+
+------------------------------------------------
+End of README
+------------------------------------------------

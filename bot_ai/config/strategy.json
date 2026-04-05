@@ -1,0 +1,45 @@
+{
+  "strategy": {
+    "name": "meta_strategy",
+    "params": {
+      "mode": "majority",
+      "position_size": 0.01,
+      "strategies": [
+        {
+          "name": "ma_crossover_strategy",
+          "params": {
+            "short_window": 9,
+            "long_window": 21,
+            "position_size": 0.01
+          }
+        },
+        {
+          "name": "rsi_strategy",
+          "params": {
+            "period": 14,
+            "oversold": 30,
+            "overbought": 70,
+            "position_size": 0.01
+          }
+        },
+        {
+          "name": "macd_strategy",
+          "params": {
+            "fast_period": 12,
+            "slow_period": 26,
+            "signal_period": 9,
+            "position_size": 0.01
+          }
+        },
+        {
+          "name": "bollinger_strategy",
+          "params": {
+            "period": 20,
+            "multiplier": 2,
+            "position_size": 0.01
+          }
+        }
+      ]
+    }
+  }
+}

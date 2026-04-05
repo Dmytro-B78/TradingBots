@@ -1,65 +1,88 @@
-# bot_ai/backtest/backtest_engine.py
-# Исполняет сигналы, рассчитывает метрики, сохраняет лог сделок
+# ================================================================
+# File: bot_ai/backtest/backtest_engine.py
+# Module: backtest.backtest_engine
+# Purpose: NT-Tech Backtest Engine
+# Responsibilities:
+#   - Load historical data
+#   - Feed candles into strategy
+#   - Process signals through logic pipeline
+#   - Simulate order execution
+#   - Track PnL, trades, winrate
+# Notes:
+#   - ASCII-only
+# ================================================================
 
-import os
 import pandas as pd
-from bot_ai.backtest.simulator import Simulator
 
-def run_backtest(pair, timeframe, strategy, rsi_threshold, capital, risk_pct):
-    # Пути к файлам сигналов и исторических свечей
-    signal_file = f"paper_logs/test_signal_{pair}_signals.csv"
-    candle_file = f"data/history/{pair}_1h.csv"
+from bot_ai.strategy.strategy_manager import StrategyManager
+from bot_ai.logic.signal_pipeline import SignalPipeline
+from bot_ai.logic.risk_engine import RiskEngine
 
-    # Проверка наличия файлов
-    if not os.path.exists(signal_file):
-        print(f"❌ Нет сигналов: {signal_file}")
-        return None
-    if not os.path.exists(candle_file):
-        print(f"❌ Нет свечей: {candle_file}")
-        return None
 
-    # Загрузка сигналов
-    signals = pd.read_csv(signal_file)
-    signals["entry_time"] = pd.to_datetime(signals["entry_time"], unit="ms").dt.floor("h")
+class BacktestEngine:
+    """
+    NT-Tech Backtest Engine.
+    """
 
-    # Загрузка свечей
-    candles = pd.read_csv(candle_file)
-    candles["time"] = pd.to_datetime(candles["time"])
+    def __init__(self, strategy_name, symbol):
+        self.symbol = symbol.upper()
 
-    # Инициализация симулятора
-    sim = Simulator(
-        initial_capital=capital,
-        risk_per_trade=risk_pct,
-        pair=pair,
-        timeframe=timeframe
-    )
+        # Strategy
+        self.strategy_manager = StrategyManager()
+        self.strategy = self.strategy_manager.load(strategy_name)
 
-    # Обработка сигналов
-    for _, signal in signals.iterrows():
-        entry_time = signal["entry_time"]
-        side = signal["signal"].upper()
-        entry_price = signal["price"]
+        # Logic
+        self.pipeline = SignalPipeline()
+        self.risk = RiskEngine()
 
-        # Поиск свечи по времени
-        candle = candles[candles["time"] == entry_time]
-        if candle.empty:
-            continue
+        # Results
+        self.trades = []
+        self.position = 0
+        self.entry_price = None
+        self.pnl = 0.0
 
-        row = candle.iloc[0]
-        low = float(row["low"])
-        high = float(row["high"])
+    # ------------------------------------------------------------
+    # Execution simulator
+    # ------------------------------------------------------------
+    def _execute(self, decision, price):
+        side = decision.get("side")
+        size = decision.get("size", 1)
 
-        # Проверка исполнимости сигнала
-        if low <= entry_price <= high:
-            sim.execute_trade(
-                time=entry_time,
-                side=side,
-                price=entry_price
-            )
+        if side == "BUY" and self.position == 0:
+            self.position = size
+            self.entry_price = price
 
-    # Получение отчёта и сохранение сделок
-    report, trades_df = sim.get_report()
-    os.makedirs("logs", exist_ok=True)
-    trades_df.to_csv("logs/trades.csv", index=False)
+        elif side == "SELL" and self.position > 0:
+            profit = (price - self.entry_price) * self.position
+            self.pnl += profit
+            self.trades.append(profit)
+            self.position = 0
+            self.entry_price = None
 
-    return report
+    # ------------------------------------------------------------
+    # Backtest runner
+    # ------------------------------------------------------------
+    def run(self, df):
+        for _, candle in df.iterrows():
+            price = candle["close"]
+            signal = self.strategy.on_candle(candle)
+
+            if signal is None:
+                continue
+
+            pipeline_output = self.pipeline.process(signal, price)
+            decision = self.risk.decide(pipeline_output, price)
+
+            if decision:
+                self._execute(decision, price)
+
+        winrate = (
+            sum(1 for t in self.trades if t > 0) / len(self.trades) * 100
+            if self.trades else 0
+        )
+
+        return {
+            "pnl": self.pnl,
+            "trades": self.trades,
+            "winrate": winrate
+        }

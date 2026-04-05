@@ -5,72 +5,455 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e9f8f7e2-f828-4181-a3a8-bb311f72c992" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$" beforeDir="false" afterPath="$PROJECT_DIR$" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.coverage" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitattributes" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/ci.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/fff_matrix.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/tests.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/NT.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/NT.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CHAT_STYLE.md" beforeDir="false" afterPath="$PROJECT_DIR$/CHAT_STYLE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GIT_CHEATSHEET_PROJECT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Makefile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PROJECT_INFO.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README_DIPLOMA.md" beforeDir="false" afterPath="$PROJECT_DIR$/README_DIPLOMA.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/backtest_runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/backtest/backtest_runner.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/core/context.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/core/context.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/core/strategy.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/core/strategy.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/data_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/data_loader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/metrics.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/metrics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/pipeline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/pipeline_full.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/pipeline_full.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/risk/guard.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/risk/guard.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/risk/report.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/risk/report.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/risk/risk_guard.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/risk/risk_guard.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/risk/risk_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/risk/risk_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/selector/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/selector/pipeline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/selector/pipeline_select_pairs.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/selector/pipeline_select_pairs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/selector/pipeline_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/selector/pipeline_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/breakout.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/strategy/breakout.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/mean_reversion.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/strategy/mean_reversion.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/rsi_reversal_strategy.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/strategy/rsi_reversal_strategy.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/strategy_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/strategy/strategy_loader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/strategy_selector.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/strategy/strategy_selector.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot_ai/utils/portfolio_report.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/utils/portfolio_report.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README_DIPLOMA.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TODO" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/_inspect_backtest_engine.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/adaptive_params.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/add_riskguard_stub.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/add_select_pairs_stub.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/analyze_grid_search.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/analyze_results.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/analyze_signals.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/apply_test_fixes.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backtest/backtest_engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backtest/equity_plot.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backtest/html_report.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backtest/metrics.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backtest/report.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backtest/simulator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backtest/walk_forward.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backtest_cli.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backtest_logs/BTCUSDT_1h_equity.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backtest_runner.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/benchmark_hodl.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/best_config.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/binance_client.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/alerts/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/alerts/alerts_main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/alerts/discord_alert.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/alerts/email_alert.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/alerts/telegram_alert.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/analytics/equity_plot.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/analytics/equity_report.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/analytics/generate_fake_trades.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/analytics/metrics.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/analytics/metrics_calculator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/analytics/report_generator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/analyze_backtest_results.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/backtest_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/backtest/backtest_engine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/backtest_rsi_reversal.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/backtest_runner.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/comparison.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/equity_plot.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/grid_optimizer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/optimize_rsi_grid.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/plotter.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/simulate_rsi_trades.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/simulate_top_rsi_configs.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/simulator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/sma_backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/split.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/backtest/strategy_comparator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/cli/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/cli/cli_main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/cli/main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/cli/optimize_cli.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/cli_entrypoint.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/config/config_loader.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/config/default_config.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/config/range.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/config/rsi_bbands.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/config/rsi_ichimoku.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/config/rsi_macd.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/config/selector_config.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/config/trader.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/config/volatile.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/alerts.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/bot_backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/bot_live.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/bot_paper.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/config_loader.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/context.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/exchange.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/exchange_interface.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/execution_engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/live.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/logger.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/logging_setup.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/market_context.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/order_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/risk.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/signal.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/state_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/trade_context.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/core/walk_forward.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/dashboard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/data_loader.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/db.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/debug/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/debug/debug_runner.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/demo/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/demo/demo_mode.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/demo/demo_runner.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/diagnostics/backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/diagnostics/checks.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/diagnostics/debug_tools.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/diagnostics/monitor_main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/diagnostics/stress_test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/exchange/client.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/exchange/data_loader.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/execution/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/execution/binance_executor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/execution/executor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/execution/log_trade_to_csv_patch.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/execution/mock_executor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/execution/order_executor.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/execution/order_executor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/execution/position_tracker.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/execution/trade_logger.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/filters/entry_filters.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/filters/mtf_filter.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/filters/regime_classifier.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/filters/trend_filter.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/filters/volatility_filter.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/indicators/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/live/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/live/bot_live.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/live/live_runner.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/live_trader_engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/loaders/sample_data.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/metrics.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/ml/features.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/ml/model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/monitor/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/monitor/monitor_main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/optimize.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/paper_trader.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/pipeline_full.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/_patch_guard_line.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/cooldown.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/dynamic_sl_tp.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/guard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/position_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/position_sizer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/position_sizer_sl.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/report.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/risk_guard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/risk_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/risk_report.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/risk/sl_tp.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/run_grid_search.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/selector/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/selector/fetch_and_filter_pairs.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/selector/filters.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/selector/metrics.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/selector/pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/selector/pipeline_debug.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/selector/pipeline_select_pairs.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/selector/pipeline_show_fix.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/selector/pipeline_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/selector/selector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/selector/selector_engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/selector/trend_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/server/server_main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/signals/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/signals/save.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/signals/signal_generator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/signals/sl_tp_OLD.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/state/position_store.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/state/position_tracker.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/state/positions/BTCUSDT_1h_open_position.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/state/trade_logger.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/adaptive_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/adaptive_strategy_engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/ai_controller.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/backtester.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/base_strategy.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/strategy/base_strategy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/breakout.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/breakout_utf8.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/countertrend.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/executable_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/factory.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/live_trader_engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/ma_crossover.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/ma_crossover_strategy.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/strategy/ma_crossover_strategy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/mean_reversion.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/range.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/rsi.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/rsi_bbands.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/rsi_for_backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/rsi_ichimoku.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/rsi_macd.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/rsi_reversal.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/rsi_reversal_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/run_strategies.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/signal.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/simple_ma.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/simple_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/sl_tp.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/sma.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/sma_for_backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/sma_reversal.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/sma_reversal_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/strategy_base.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/strategy_catalog.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/strategy_loader.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/strategy_router.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/strategy_selector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/strategy_validator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/test_signal.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/trader_engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/volatile.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/volatility_breakout.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/volatility_breakout_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/volume_spike.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/volume_spike_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/zero_cross.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/strategy/zero_cross_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/training/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/training/train_model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/data.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/data_loader.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/export_trades_to_csv.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/filter_pairs.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/generate_report.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/indicators.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/load_config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/log.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/logger.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_ai/utils/logger.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/market_regime.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/notifier.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/portfolio_report.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/save.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/bot_ai/utils/state_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/utils/train_test_split.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/visuals/equity_plot.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/visuals/plot_equity_curve.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/visuals/plot_multi_asset_equity.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_ai/visuals/plot_signals.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_live_unified.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build_param_profiles.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/check_api.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/check_api_verbose.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/check_signal_executability.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/check_signal_matches.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/check_strategy.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/clean_tests.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/compare_runner.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/download_binance.py" beforeDir="false" afterPath="$PROJECT_DIR$/download_binance.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/equity_curve.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/trades.json" beforeDir="false" afterPath="$PROJECT_DIR$/logs/trades.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_backup.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_old.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cooldown.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard_graph_tab.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard_risk_tab.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_walk.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/executor.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/pipeline.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/risk_guard.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/strategy.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/download_binance.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/error.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/failed_tests.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_and_commit.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_pass_lines.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_pipeline_syntax.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_pipeline_syntax_hard.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_test_errors.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_test_errors_final.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_test_errors_patch10.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_test_errors_patch5.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_test_errors_patch6.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_test_errors_patch7.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_test_errors_patch8.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_test_errors_patch9.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_test_errors_step2.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix_test_errors_step3.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/git_merge_main.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/live_trader.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/trades.json" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/paper_logs/download_all_history.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_breakout_strategy.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_breakout_strategy.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_mean_reversion_strategy.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_mean_reversion_strategy.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_pipeline_full.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_pipeline_full.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_riskguard_block_cooldown.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_riskguard_block_cooldown.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_rsi_reversal_strategy.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_rsi_reversal_strategy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_debug_snippet.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_part1.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_part2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/move_history_to_data.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/patch_all.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/patch_main_block.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/patch_whitelist_env.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/patch_whitelist_reset.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/patch_whitelist_symlink.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/plot_equity_curve.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/project_structure.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/project_structure.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pytest.ini" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/remove_bom_pytest.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/remove_root_tests.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/remove_tests_from_root.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/best_params.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/compare_plot.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_all_tests.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_daily_rsi_job.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_download.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_full_none_check.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_live.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_optimize.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_smoke_test.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_tests.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/download_binance.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/fix_pytest_ini.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/generate_requirements.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/generate_rsi_signals.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/generate_test_report.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/move_history_to_data.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run_all.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run_backtest_only.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run_backtest_runner.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run_backtest_selected.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run_download.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run_fff_matrix.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run_full_test_and_report.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run_selected_full.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/top10_results.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/update_whitelist.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup_scripts.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/snapshot_runner.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_logger.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests.rar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/conftest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/demo_exchange_usage.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/mock_get_data_patch.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/run_all_tests_with_coverage.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/run_all_tests_with_coverage_ci.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/run_all_tests_with_coverage_json.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/run_tests.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_backtest_engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_binance_auth.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_binance_connection.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_bot_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_breakout_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_cli_entrypoint.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_comment.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_config_loader_module.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_countertrend_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_dynamic_sltp.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_exchange_interface.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_executor_equity.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_executor_errors.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_executor_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_executor_logging.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_executor_module.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_executor_position.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_executor_sl_tp.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_executor_with_riskguard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_extra_coverage.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_fetch_and_filter_pairs.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_logging_setup.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_mean_reversion_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_mtf_filter.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_no_header_in_middle.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_notifier.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_notifier_module.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_pipeline_full.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_pipeline_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_position_sizer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_position_sizer_sl.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_project_state.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_range_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_risk_guard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_risk_guard_extended.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_risk_guard_logging.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_risk_report.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_risk_report_module.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_riskguard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_riskguard_block_cooldown.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_riskguard_block_daily_loss.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_riskguard_block_kill_switch.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_riskguard_block_logging.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_riskguard_block_low_volume.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_riskguard_block_max_positions.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_riskguard_block_pass.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_riskguard_block_position_size.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_riskguard_block_risk_per_trade.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_riskguard_block_spread.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_riskguard_block_total_loss.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_rsi_bbands_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_rsi_for_backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_rsi_ichimoku_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_rsi_reversal_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_rsi_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_runner.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_selector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_show_top_pairs.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_sl_tp.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_sl_tp_extended.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_sma_for_backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_sma_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_smoke.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_strategies.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_strategy_basic.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_strategy_execution.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_strategy_filters.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_strategy_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_strategy_live.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_strategy_risk.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_trend_ok.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_volatile_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/fix_imports.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/trades.db" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/walk_forward.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/walk_forward_results.json" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Python Script" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-  </component>
-  <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/main.py" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
   </component>
-  <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
-  </component>
   <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 6
+  &quot;associatedIndex&quot;: 7
 }</component>
-  <component name="ProjectId" id="32pZTXnpGBPJ6WFixSPPxeNYVjk" />
+  <component name="ProjectId" id="3BZVfmIXVz7TbzSiWwueHnTUQiB" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="1" id="Add" />
   </component>
@@ -81,68 +464,13 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.run_main.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;diploma&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/TradingBots/NT&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;
+    &quot;git-widget-placeholder&quot;: &quot;diploma&quot;
   }
 }</component>
-  <component name="RunManager" selected="Python.main">
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
-      <module name="NT" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="SDK_NAME" value="Python 3.13 (PY)" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="run_main" type="PythonConfigurationType" factoryName="Python">
-      <module name="NT" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="SDK_NAME" value="Python 3.13 (PY)" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -153,10 +481,10 @@
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="e9f8f7e2-f828-4181-a3a8-bb311f72c992" name="Changes" comment="" />
-      <created>1758119482566</created>
+      <created>1774696687269</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1758119482566</updated>
+      <updated>1774696687269</updated>
     </task>
     <servers />
   </component>

@@ -1,154 +1,128 @@
-# ============================================
-# File: C:\TradingBots\NT\main.py
-# Purpose: CLI entrypoint with safe argument parsing for tests
-# Encoding: UTF-8 without BOM
-# ============================================
+# ================================================================
+# File: main.py
+# NT-Tech main entry point for backtesting
+# ASCII-only
+# ================================================================
 
-import argparse
+import sys
 import json
 import os
-import pandas as pd
-from datetime import datetime, timezone
-from binance.client import Client
-from binance.exceptions import BinanceAPIException
-from dotenv import load_dotenv
-from pathlib import Path
 
-from bot_ai.strategy.breakout import BreakoutStrategy
-from bot_ai.strategy.mean_reversion import MeanReversionStrategy
-from bot_ai.strategy.rsi_reversal_strategy import RSIReversalStrategy
-from bot_ai.metrics import calculate_metrics
-from bot_ai.core.live import run_live
-
-load_dotenv()
-
-
-def load_config(path):
-    with open(path, "r", encoding="utf-8-sig") as f:
-        return json.load(f)
-
-
-def filter_symbols(client, config):
-    tickers = client.get_ticker()
-    volume_threshold = config["risk"]["min_24h_volume_usdt"]
-    max_spread = config["risk"]["max_spread_pct"] / 100
-    min_volatility = config["risk"]["min_volatility"]
-    top_n = config["risk"]["top_n_pairs"]
-
-    filtered = []
-    for t in tickers:
-        if not t["symbol"].endswith("USDT"):
-            continue
-        try:
-            vol = float(t["quoteVolume"])
-            ask = float(t["askPrice"])
-            bid = float(t["bidPrice"])
-            spread = (ask - bid) / ask if ask > 0 else 1
-            high = float(t["highPrice"])
-            low = float(t["lowPrice"])
-            volatility = (high - low) / low if low > 0 else 0
-
-            if vol >= volume_threshold and spread <= max_spread and volatility >= min_volatility:
-                filtered.append((t["symbol"], vol))
-        except Exception:
-            continue
-
-    filtered.sort(key=lambda x: x[1], reverse=True)
-    return [s[0] for s in filtered[:top_n]]
-
-
-def safe_parse_args():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument("--mode", choices=["backtest", "live", "paper"], required=False, default="backtest")
-    parser.add_argument("--symbol", required=False, default="BTCUSDT")
-    parser.add_argument("--strategy", required=False, default="rsi")
-    parser.add_argument("--timeframe", default="1h")
-    parser.add_argument("--balance", type=float, default=1000)
-    parser.add_argument("--config", default="config.json")
-
-    try:
-        # Tests call main() with no args → parse empty list
-        return parser.parse_args([])
-    except SystemExit:
-        # Prevent pytest from failing
-        return parser.parse_args([])
+from bot_ai.engine.data_loader import DataLoader
+from bot_ai.engine.config_loader import ConfigLoader
+from bot_ai.engine.strategy_router import StrategyRouter
+from bot_ai.engine.trade_analyzer import TradeAnalyzer
+from bot_ai.engine.file_logger import FileLogger
 
 
 def main():
-    args = safe_parse_args()
 
-    valid_intervals = {
-        "1m", "3m", "5m", "15m", "30m",
-        "1h", "2h", "4h", "6h", "8h", "12h",
-        "1d", "3d", "1w", "1M"
-    }
-
-    valid_strategies = {"breakout", "mean_reversion", "rsi"}
-
-    if args.timeframe not in valid_intervals:
-        print(f"Invalid timeframe: {args.timeframe}")
-        return
-
-    if args.strategy not in valid_strategies:
-        print(f"Invalid strategy: {args.strategy}")
-        return
-
-    config = load_config(args.config)
-    params = config.get("params", {})
-    params["symbol"] = args.symbol
-
+    # ------------------------------------------------------------
+    # Load config
+    # ------------------------------------------------------------
     try:
-        api_key = os.getenv("BINANCE_API_KEY")
-        api_secret = os.getenv("BINANCE_API_SECRET")
-        client = Client(api_key, api_secret)
-
-        if args.strategy == "breakout":
-            strategy = BreakoutStrategy(params)
-        elif args.strategy == "mean_reversion":
-            strategy = MeanReversionStrategy(params)
-        else:
-            strategy = RSIReversalStrategy(params)
-
-        if args.mode == "backtest":
-            df_path = f"data/{args.symbol}_{args.timeframe}.csv"
-            if not os.path.exists(df_path):
-                print(f"Data not found: {df_path}")
-                return
-
-            df = pd.read_csv(df_path)
-            df["time"] = pd.to_datetime(df["time"])
-            df = strategy.calculate_indicators(df)
-            df = strategy.generate_signals(df)
-            strategy.backtest(df, initial_balance=args.balance)
-            summary_df = strategy.summary(args.symbol)
-            metrics = calculate_metrics(summary_df, initial_balance=args.balance)
-
-            if summary_df.empty:
-                print("No trades found.")
-                return
-
-            metrics_df = pd.DataFrame([{
-                "symbol": args.symbol,
-                "total_trades": metrics["trades"],
-                "final_balance": metrics["final_balance"],
-                "win_rate": metrics["win_rate"]
-            }])
-
-            os.makedirs("logs", exist_ok=True)
-            metrics_df.to_csv("logs/top10.csv", mode="a", header=not os.path.exists("logs/top10.csv"), index=False)
-            return
-
-        if args.mode == "paper":
-            run_live(strategy, args.symbol, args.timeframe, client, initial_balance=args.balance, paper_mode=True)
-
-        elif args.mode == "live":
-            run_live(strategy, args.symbol, args.timeframe, client, initial_balance=args.balance)
-
-    except BinanceAPIException as e:
-        print(f"Binance API error: {e.message}")
+        config = ConfigLoader.load_from_json("config.json")
+        FileLogger.info("Config loaded successfully")
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        print("Config load error: " + str(e))
+        FileLogger.error("Config load error: " + str(e))
+        return
+
+    # ------------------------------------------------------------
+    # Validate strategy section
+    # ------------------------------------------------------------
+    if "meta_strategy" not in config:
+        msg = "Missing required config section: meta_strategy"
+        print(msg)
+        FileLogger.error(msg)
+        return
+
+    # ------------------------------------------------------------
+    # Load candles.json which contains directory path
+    # ------------------------------------------------------------
+    try:
+        with open("candles.json", "r", encoding="utf-8") as f:
+            c = json.load(f)
+
+        if "source" not in c:
+            raise Exception("candles.json must contain 'source' field")
+
+        source_path = c["source"]
+
+        if not os.path.exists(source_path):
+            raise Exception("Source path does not exist: " + str(source_path))
+
+        candles = DataLoader.load(source_path)
+
+        if not candles:
+            raise Exception("No candles loaded")
+
+        FileLogger.info("Candles loaded: " + str(len(candles)))
+        print("Total candles:", len(candles))
+
+    except Exception as e:
+        print("Candle load error: " + str(e))
+        FileLogger.error("Candle load error: " + str(e))
+        return
+
+    # ------------------------------------------------------------
+    # Run strategy
+    # ------------------------------------------------------------
+    try:
+        router = StrategyRouter(config)
+        result = router.run(candles)
+
+        if not isinstance(result, dict):
+            raise Exception("Strategy returned invalid result")
+
+        if "trades" not in result:
+            raise Exception("Strategy result missing 'trades' field")
+
+        FileLogger.info("Strategy executed successfully")
+
+    except Exception as e:
+        print("Strategy error: " + str(e))
+        FileLogger.error("Strategy error: " + str(e))
+        return
+
+    # ------------------------------------------------------------
+    # Analyze trades
+    # ------------------------------------------------------------
+    try:
+        trades = result.get("trades", [])
+
+        analyzer = TradeAnalyzer(
+            trades,
+            result.get("initial_balance", 0),
+            result.get("final_value", 0)
+        )
+        stats = analyzer.summary()
+
+        FileLogger.info("Trade analysis completed")
+
+    except Exception as e:
+        print("Trade analysis error: " + str(e))
+        FileLogger.error("Trade analysis error: " + str(e))
+        return
+
+    # ------------------------------------------------------------
+    # Output
+    # ------------------------------------------------------------
+    print("================================================")
+    print(" NT-Tech Strategy Report")
+    print("================================================")
+    print("Initial balance:", result.get("initial_balance", 0))
+    print("Final value:    ", result.get("final_value", 0))
+    print("------------------------------------------------")
+    print("Trades:")
+    for t in trades:
+        print(t)
+    print("------------------------------------------------")
+    print("Statistics:")
+    for k, v in stats.items():
+        print(k + ":", v)
+
+    FileLogger.info("NT-Tech run completed")
 
 
 if __name__ == "__main__":

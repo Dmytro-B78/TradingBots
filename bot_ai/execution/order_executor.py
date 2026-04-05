@@ -1,33 +1,49 @@
-# ============================================
-# File: order_executor.py
-# Purpose: Execute trade orders (mock implementation)
-# Format: UTF-8 without BOM, ASCII-only, ready for integration
-# ============================================
+# ================================================================
+# File: bot_ai/execution/order_executor.py
+# Module: execution.order_executor
+# Purpose: NT-Tech order executor
+# Responsibilities:
+#   - High-level wrapper around exchange adapter
+#   - Provide clean API for placing and managing orders
+# Notes:
+#   - ASCII-only
+# ================================================================
 
-def execute_order(symbol, side, entry, stop, target, size):
+from bot_ai.execution.execution_errors import ExecutionError
+from bot_ai.execution.order_status import OrderStatus
+
+
+class OrderExecutor:
     """
-    Execute a trade order with the given parameters.
-
-    Parameters:
-        symbol (str): Trading pair (e.g., "BTC/USDT")
-        side (str): "buy" or "sell"
-        entry (float): Entry price
-        stop (float): Stop-loss price
-        target (float): Take-profit price
-        size (float): Order size
-
-    Returns:
-        dict: Execution result (mocked)
+    NT-Tech order executor.
+    Wraps exchange adapter and returns normalized results.
     """
-    print(f"EXECUTE: {side.upper()} {symbol} @ {entry} (SL: {stop}, TP: {target}, Size: {size})")
 
-    # TODO: Replace this mock with actual exchange API call (e.g., CCXT)
-    return {
-        "symbol": symbol,
-        "side": side,
-        "entry": entry,
-        "stop": stop,
-        "target": target,
-        "size": size,
-        "status": "executed"
-    }
+    def __init__(self, adapter):
+        self.adapter = adapter
+
+    def place(self, order):
+        try:
+            data = self.adapter.send_order(order)
+            return data
+        except Exception as e:
+            raise ExecutionError(str(e))
+
+    def status(self, order_id, symbol):
+        try:
+            data = self.adapter.get_order_status(order_id, symbol)
+            return OrderStatus(
+                status=data["status"],
+                filled=data["filled"],
+                remaining=data["remaining"],
+                raw=data["raw"]
+            )
+        except Exception as e:
+            raise ExecutionError(str(e))
+
+    def cancel(self, order_id, symbol):
+        try:
+            data = self.adapter.cancel_order(order_id, symbol)
+            return data
+        except Exception as e:
+            raise ExecutionError(str(e))

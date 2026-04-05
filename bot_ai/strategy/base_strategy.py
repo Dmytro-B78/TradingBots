@@ -1,27 +1,37 @@
-# ============================================
-# File: C:\TradingBots\NT\bot_ai\strategy\base_strategy.py
-# Purpose: Base strategy class with create_signal method (fixed: added import pandas)
-# Encoding: UTF-8 without BOM
-# ============================================
-
-import logging
-import pandas as pd
-from bot_ai.core.signal import Signal
+# ================================================================
+# File: bot_ai/strategy/base_strategy.py
+# Module: strategy.base_strategy
+# Purpose: NT-Tech base class for all strategies
+# Responsibilities:
+#   - Maintain price buffer
+#   - Provide update() and on_candle() hooks
+#   - Define unified NT-Tech strategy interface
+# Notes:
+#   - ASCII-only
+# ================================================================
 
 class BaseStrategy:
-    def __init__(self, params: dict = None):
+    """
+    NT-Tech base class for all trading strategies.
+    Provides:
+        - params dict
+        - price buffer
+        - update(price)
+        - signal() -> dict or None
+        - on_candle(candle)
+    """
+
+    def __init__(self, params=None):
         self.params = params or {}
+        self.prices = []
 
-    def create_signal(self, action: str, df):
-        """Construct a Signal object with the latest price and action."""
-        price = df["close"].iloc[-1]
-        time = df.index[-1]
-        symbol = df["symbol"].iloc[-1] if "symbol" in df.columns else "UNKNOWN"
+    def update(self, price):
+        self.prices.append(price)
 
-        if pd.isna(price):
-            logging.warning(f"NaN price in signal: {action} {symbol} @ NaN [{time}]")
-            price = None
-        else:
-            logging.debug(f"Creating signal: {action} {symbol} @ {price} [{time}]")
+    def signal(self):
+        return None
 
-        return Signal(symbol=symbol, action=action, price=price, time=time)
+    def on_candle(self, candle):
+        price = candle["close"]
+        self.update(price)
+        return self.signal()

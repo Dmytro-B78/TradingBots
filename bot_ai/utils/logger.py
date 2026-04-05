@@ -1,21 +1,38 @@
-# ============================================
-# File: C:\TradingBots\NT\bot_ai\utils\logger.py
-# Purpose: Signal logger for strategies and live trading
-# Format: UTF-8 without BOM
-# ============================================
+# ================================================================
+# File: bot_ai/utils/logger.py
+# Module: utils.logger
+# Purpose: NT-Tech lightweight logging utility
+# Responsibilities:
+#   - Provide simple stdout logging
+#   - Support info, warning, error levels
+#   - Keep output clean and uniform
+# Notes:
+#   - ASCII-only
+# ================================================================
 
-import logging
-import os
+import datetime
 
-LOG_DIR = "logs"
-os.makedirs(LOG_DIR, exist_ok=True)
 
-logging.basicConfig(
-    filename=os.path.join(LOG_DIR, "signals.log"),
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s",
-)
+class Logger:
+    """
+    NT-Tech minimal logger.
+    """
 
-def log_signal(message):
-    print(message)
-    logging.info(message)
+    @staticmethod
+    def _ts():
+        return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+    @staticmethod
+    def info(msg):
+        print(f"[INFO] {Logger._ts()} | {msg}")
+
+    @staticmethod
+    def warn(msg):
+        print(f"[WARN] {Logger._ts()} | {msg}")
+
+    @staticmethod
+    def error(msg):
+        print(f"[ERROR] {Logger._ts()} | {msg}")
+
+
+log = Logger()
