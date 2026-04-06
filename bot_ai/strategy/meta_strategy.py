@@ -1,154 +1,307 @@
 # ================================================================
 # File: bot_ai/strategy/meta_strategy.py
-# NT-Tech MetaStrategy 2.6 (incremental filters, O(1) per candle)
-# ASCII-only
+# NT-Tech MetaStrategy 4.5.4 (Variant 1)
+# - Compression blocks entries only
+# - Exits are always allowed (no force-close)
+# - Keeps 4.4 Volatility Engine + 4.5 entry-only anti-whipsaw
+# - Logger strategy_signals preserved for debug
+# ASCII-only, deterministic, no Cyrillic
 # ================================================================
 
+from bot_ai.engine.signal_logger import SignalLogger
 from bot_ai.strategy.ma_crossover_strategy import MACrossoverStrategy
-from bot_ai.strategy.bollinger_strategy import BollingerStrategy
 from bot_ai.strategy.macd_strategy import MACDStrategy
 from bot_ai.strategy.rsi_strategy import RSIStrategy
+from bot_ai.strategy.bollinger_strategy import BollingerStrategy
+from bot_ai.strategy.microtrend_strategy import MicroTrendStrategy
 
 
 class MetaStrategy:
-    """
-    NT-Tech MetaStrategy 2.6
-    - incremental trend EMA
-    - incremental ATR
-    - trend slope filter
-    - volatility ratio filter
-    - ATR slope filter
-    - O(1) per candle
-    - orchestrates 4 sub-strategies
-    """
+    def __init__(self, config=None):
+        config = config or {}
 
-    def __init__(self, params=None):
-        self.params = params if isinstance(params, dict) else {}
+        # Base thresholds
+        self.open_threshold = float(config.get("open_threshold", 0.5))
+        self.close_threshold = float(config.get("close_threshold", -0.5))
 
-        # Sub-strategies
+        # Hysteresis
+        self.open_hysteresis = int(config.get("open_hysteresis", 2))
+        self.close_hysteresis = int(config.get("close_hysteresis", 2))
+        self.open_lock = 0
+        self.close_lock = 0
+
+        self.position = None
+        self.regime = "range"
+
+        # Volatility engine (ATR)
+        self.atr_period = int(config.get("atr_period", 14))
+        self.atr_min_pct = float(config.get("atr_min_pct", 0.0010))
+        self.atr_max_pct = float(config.get("atr_max_pct", 0.0200))
+        self.vol_thr_low_mult = float(config.get("vol_thr_low_mult", 0.85))
+        self.vol_thr_high_mult = float(config.get("vol_thr_high_mult", 1.25))
+        self.vol_weight_low_boost = float(config.get("vol_weight_low_boost", 1.15))
+        self.vol_weight_high_boost = float(config.get("vol_weight_high_boost", 1.15))
+        self.vol_weight_penalty = float(config.get("vol_weight_penalty", 0.85))
+
+        # Consensus smoothing (entry-only anti-whipsaw)
+        self.ema_alpha = float(config.get("ema_alpha", 0.50))
+        self.momentum_boost = float(config.get("momentum_boost", 0.12))
+        self.whipsaw_delta = float(config.get("whipsaw_delta", 0.30))
+        self.prev_ema_conf = None
+        self.ema_conf = None
+
+        # Weights
+        self.weights = {
+            "MACrossoverStrategy": 1.5,
+            "MACDStrategy": 2.0,
+            "RSIStrategy": 1.5,
+            "BollingerStrategy": 2.0,
+            "MicroTrendStrategy": 1.0
+        }
+
+        # Regime strategies
+        self.regime_strategies = {
+            "trend": ["MACrossoverStrategy", "MACDStrategy", "MicroTrendStrategy"],
+            "range": ["RSIStrategy", "BollingerStrategy"],
+            "expansion": ["MACrossoverStrategy", "MACDStrategy", "BollingerStrategy"],
+            "compression": []  # entries blocked; exits allowed
+        }
+
         self.strategies = [
-            MACrossoverStrategy(self.params.get("ma", {})),
-            BollingerStrategy(self.params.get("boll", {})),
-            MACDStrategy(self.params.get("macd", {})),
-            RSIStrategy(self.params.get("rsi", {})),
+            MACrossoverStrategy(),
+            MACDStrategy(),
+            RSIStrategy(),
+            BollingerStrategy(),
+            MicroTrendStrategy()
         ]
 
-        # Trend filter parameters
-        self.trend_period = self.params.get("trend_period", 50)
-        self.k_trend = 2 / (self.trend_period + 1)
-        self.trend_ema = None
-        self.prev_trend_ema = None
-        self.min_slope = self.params.get("min_slope", 0.0)
-
-        # ATR filter parameters
-        self.atr_period = self.params.get("atr_period", 14)
-        self.k_atr = 1 / self.atr_period
-        self.atr = None
-        self.prev_atr = None
-        self.min_atr = self.params.get("min_atr", 0.1)
-        self.min_volatility_ratio = self.params.get("min_volatility_ratio", 0.0005)
-
-        # Previous candle for ATR
-        self.prev_candle = None
+        self.recent_candles = []
+        self.logger = SignalLogger()
 
     # ------------------------------------------------------------
-    # Incremental trend filter
+    # Regime detection
     # ------------------------------------------------------------
-    def trend_ok(self, price):
-        if self.trend_ema is None:
-            self.trend_ema = price
-            self.prev_trend_ema = price
-            return False
+    def detect_regime(self, candle):
+        o = candle["open"]
+        h = candle["high"]
+        l = candle["low"]
+        c = candle["close"]
 
-        # Update EMA
-        self.prev_trend_ema = self.trend_ema
-        self.trend_ema = price * self.k_trend + self.trend_ema * (1 - self.k_trend)
+        body = abs(c - o)
+        rng = h - l
 
-        # Slope
-        slope = self.trend_ema - self.prev_trend_ema
+        if rng <= 0:
+            return "compression"
 
-        # Conditions
-        if price <= self.trend_ema:
-            return False
-        if slope <= self.min_slope:
-            return False
+        body_ratio = body / rng
 
-        return True
+        if body_ratio >= 0.65:
+            return "trend"
+        if body_ratio <= 0.18:
+            return "compression"
+        if 0.18 < body_ratio < 0.65 and rng > abs(c) * 0.01:
+            return "expansion"
+
+        return "range"
 
     # ------------------------------------------------------------
-    # Incremental ATR filter
+    # ATR helpers
     # ------------------------------------------------------------
-    def atr_ok(self, candle):
-        if self.prev_candle is None:
-            self.prev_candle = candle
-            return False
+    def compute_atr(self):
+        if len(self.recent_candles) < (self.atr_period + 1):
+            return None
 
-        high = candle.get("high")
-        low = candle.get("low")
-        close_prev = self.prev_candle.get("close")
+        trs = []
+        start = len(self.recent_candles) - (self.atr_period + 1)
+        prev_close = self.recent_candles[start]["close"]
 
-        tr = max(
-            high - low,
-            abs(high - close_prev),
-            abs(low - close_prev),
+        for i in range(start + 1, len(self.recent_candles)):
+            c = self.recent_candles[i]
+            h = c["high"]
+            l = c["low"]
+            tr = max(h - l, abs(h - prev_close), abs(l - prev_close))
+            trs.append(tr)
+            prev_close = c["close"]
+
+        return sum(trs) / float(len(trs)) if trs else None
+
+    def compute_atr_pct(self, candle):
+        atr = self.compute_atr()
+        if atr is None or candle["close"] <= 0:
+            return None
+        return atr / candle["close"]
+
+    def get_vol_state(self, atr_pct):
+        if atr_pct is None:
+            return None
+        mid = (self.atr_min_pct + self.atr_max_pct) / 2.0
+        return "high" if atr_pct >= mid else "low"
+
+    def get_vol_threshold_multiplier(self, atr_pct):
+        if atr_pct is None:
+            return 1.0
+        if atr_pct <= self.atr_min_pct:
+            return self.vol_thr_low_mult
+        if atr_pct >= self.atr_max_pct:
+            return self.vol_thr_high_mult
+        span = self.atr_max_pct - self.atr_min_pct
+        t = (atr_pct - self.atr_min_pct) / span if span > 0 else 0.0
+        return self.vol_thr_low_mult + t * (self.vol_thr_high_mult - self.vol_thr_low_mult)
+
+    def get_vol_weight_multiplier(self, name, atr_pct):
+        state = self.get_vol_state(atr_pct)
+        if state is None:
+            return 1.0
+        if state == "high":
+            if name in ["MACrossoverStrategy", "MACDStrategy"]:
+                return self.vol_weight_high_boost
+            if name in ["RSIStrategy", "BollingerStrategy"]:
+                return self.vol_weight_penalty
+            return 1.0
+        if name in ["RSIStrategy", "BollingerStrategy"]:
+            return self.vol_weight_low_boost
+        if name in ["MACrossoverStrategy", "MACDStrategy"]:
+            return self.vol_weight_penalty
+        return 1.0
+
+    # ------------------------------------------------------------
+    # Dynamic thresholds by regime
+    # ------------------------------------------------------------
+    def get_dynamic_thresholds(self):
+        open_thr = self.open_threshold
+        close_thr = self.close_threshold
+        if self.regime == "trend":
+            open_thr -= 0.15
+            close_thr += 0.15
+        elif self.regime == "range":
+            open_thr += 0.10
+            close_thr -= 0.10
+        elif self.regime == "expansion":
+            open_thr -= 0.05
+        return (
+            max(min(open_thr, 1.0), -1.0),
+            max(min(close_thr, 1.0), -1.0),
         )
 
-        if self.atr is None:
-            self.atr = tr
-            self.prev_atr = tr
-            self.prev_candle = candle
-            return False
-
-        # Update ATR
-        self.prev_atr = self.atr
-        self.atr = self.atr + self.k_atr * (tr - self.atr)
-
-        self.prev_candle = candle
-
-        # Conditions
-        if self.atr < self.min_atr:
-            return False
-
-        # ATR must be rising
-        if self.atr <= self.prev_atr:
-            return False
-
-        # Volatility ratio
-        price = candle.get("close")
-        if price is None:
-            return False
-
-        if (self.atr / price) < self.min_volatility_ratio:
-            return False
-
-        return True
+    # ------------------------------------------------------------
+    # Max possible confidence for current regime
+    # ------------------------------------------------------------
+    def get_regime_max_conf(self, allowed, atr_pct):
+        if not allowed:
+            return 1.0
+        total = 0.0
+        for name in allowed:
+            w = self.weights.get(name, 1.0)
+            w *= self.get_vol_weight_multiplier(name, atr_pct)
+            if self.regime == "trend":
+                w *= 1.25
+            elif self.regime == "expansion":
+                w *= 0.9
+            total += w
+        return max(total, 1.0)
 
     # ------------------------------------------------------------
-    # Main orchestrator
+    # Main candle handler
     # ------------------------------------------------------------
-    def on_candle(self, candle):
-        price = candle.get("close")
-        if price is None:
-            return None
+    def on_candle(self, candle, position):
+        self.position = position
+        self.regime = self.detect_regime(candle)
 
-        # Filters
-        if not self.trend_ok(price):
-            return None
+        if self.open_lock > 0:
+            self.open_lock -= 1
+        if self.close_lock > 0:
+            self.close_lock -= 1
 
-        if not self.atr_ok(candle):
-            return None
+        self.recent_candles.append(candle)
+        if len(self.recent_candles) > 200:
+            self.recent_candles.pop(0)
 
-        # Run sub-strategies
+        allowed = self.regime_strategies.get(self.regime, None)
+        atr_pct = self.compute_atr_pct(candle)
+
+        # Compression: block entries only (no early return)
+        entries_blocked = (allowed == [])
+
+        # ATR hard gate: entries only
+        if self.position is None and atr_pct is not None:
+            if atr_pct < self.atr_min_pct or atr_pct > self.atr_max_pct:
+                self.logger.log(candle, self.regime, 0.0, None, [])
+                self.logger.last_decision = None
+                return None
+
+        strategy_signals = []
+        total_conf = 0.0
+
         for strat in self.strategies:
-            s = strat.on_candle(candle)
-            if s is None:
+            name = strat.__class__.__name__
+            if allowed is not None and name not in allowed:
                 continue
+            if hasattr(strat, "set_regime"):
+                strat.set_regime(self.regime)
+            sig = strat.on_candle(candle)
+            conf = 1.0 if sig == "BUY" else -1.0 if sig == "SELL" else 0.0
+            w = self.weights.get(name, 1.0)
+            w *= self.get_vol_weight_multiplier(name, atr_pct)
+            weighted = conf * w
+            if self.regime == "trend":
+                weighted *= 1.25
+            elif self.regime == "expansion":
+                weighted *= 0.9
+            strategy_signals.append((name, sig, weighted))
+            total_conf += weighted
 
-            # Normalize signals
-            if s == "BUY":
-                return {"signal": "OPEN_LONG"}
+        max_conf = self.get_regime_max_conf(allowed, atr_pct)
+        norm_conf = total_conf / max_conf
+        norm_conf = max(min(norm_conf, 1.0), -1.0)
 
-            if s == "SELL":
-                return {"signal": "CLOSE_LONG"}
+        # EMA smoothing
+        if self.ema_conf is None:
+            self.ema_conf = norm_conf
+        else:
+            self.ema_conf = self.ema_alpha * norm_conf + (1.0 - self.ema_alpha) * self.ema_conf
 
+        delta = 0.0
+        if self.prev_ema_conf is not None:
+            delta = self.ema_conf - self.prev_ema_conf
+
+        # Entry-only anti-whipsaw + aligned momentum
+        if self.position is None and not entries_blocked:
+            if abs(delta) >= self.whipsaw_delta:
+                self.prev_ema_conf = self.ema_conf
+                self.logger.log(candle, self.regime, total_conf, None, strategy_signals)
+                self.logger.last_decision = None
+                return None
+            if delta * self.ema_conf > 0:
+                self.ema_conf += delta * self.momentum_boost
+
+        self.prev_ema_conf = self.ema_conf
+        smooth_conf = max(min(self.ema_conf, 1.0), -1.0)
+
+        # Log for debug
+        self.logger.log(candle, self.regime, total_conf, None, strategy_signals)
+
+        open_thr, close_thr = self.get_dynamic_thresholds()
+        thr_mult = self.get_vol_threshold_multiplier(atr_pct)
+        open_thr *= thr_mult
+        close_thr *= thr_mult
+        open_thr = max(min(open_thr, 1.0), -1.0)
+        close_thr = max(min(close_thr, 1.0), -1.0)
+
+        # Entries blocked in compression
+        if self.position is None and not entries_blocked:
+            if smooth_conf >= open_thr and self.open_lock == 0:
+                self.open_lock = self.open_hysteresis
+                decision = {"signal": "OPEN_LONG", "confidence": smooth_conf, "regime": self.regime}
+                self.logger.last_decision = decision
+                return decision
+
+        # Exits always allowed
+        if self.position == "LONG":
+            if smooth_conf <= close_thr and self.close_lock == 0:
+                self.close_lock = self.close_hysteresis
+                decision = {"signal": "CLOSE_LONG", "confidence": smooth_conf, "regime": self.regime}
+                self.logger.last_decision = decision
+                return decision
+
+        self.logger.last_decision = None
         return None
