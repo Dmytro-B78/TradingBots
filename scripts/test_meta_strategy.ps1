@@ -1,15 +1,22 @@
-Write-Host "Testing MetaStrategy 2.5 on real candles..."
+# ================================================================
+# NT-Tech test_meta_strategy.ps1
+# Full-dataset MetaStrategy 3.0 tester
+# ASCII-only, deterministic, no Cyrillic
+# No nested here-strings
+# ================================================================
+
+Write-Host "Testing MetaStrategy 3.0 on full dataset..."
+Write-Host "============================================"
 
 $temp = "__meta_test.py"
 
-$code = @"
+Set-Content $temp @"
 import os
 import time
-from bot_ai.engine.data_loader import DataLoader
+import csv
 from bot_ai.strategy.meta_strategy import MetaStrategy
 
 folder = r'C:\\TradingBots\\candles\\compiled'
-
 files = [
     'SOLUSDT-1m.csv'
 ]
@@ -20,7 +27,20 @@ for fname in files:
     print("Testing:", fname)
     print("====================================")
 
-    candles = DataLoader.load(path)
+    candles = []
+    with open(path, "r") as f:
+        reader = csv.reader(f)
+        for row in reader:
+            if len(row) < 6:
+                continue
+            candles.append({
+                "open": float(row[1]),
+                "high": float(row[2]),
+                "low": float(row[3]),
+                "close": float(row[4]),
+                "volume": float(row[5])
+            })
+
     total = len(candles)
     print("Loaded candles:", total)
 
@@ -36,7 +56,6 @@ for fname in files:
     for c in candles:
         counter += 1
 
-        # progress every 10k candles
         if counter % 10000 == 0:
             elapsed = time.time() - start
             cps = counter / elapsed
@@ -44,6 +63,7 @@ for fname in files:
             print(f"Progress: {counter}/{total} | {cps:.1f} cps | ETA {eta:.1f}s")
 
         sig = meta.on_candle(c)
+
         if sig:
             total_signals += 1
             if sig.get("signal") == "OPEN_LONG":
@@ -51,11 +71,13 @@ for fname in files:
             if sig.get("signal") == "CLOSE_LONG":
                 close_long += 1
 
+    print("====================================")
     print("Signals:", total_signals)
     print("OPEN_LONG:", open_long)
     print("CLOSE_LONG:", close_long)
+    print("Final regime:", meta.regime)
+    print("====================================")
 "@
 
-Set-Content -Path $temp -Value $code
 python $temp
 Remove-Item $temp -Force

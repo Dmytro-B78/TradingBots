@@ -1,109 +1,66 @@
 # ================================================================
-# File: bot_ai/strategy/macd_strategy.py
-# NT-Tech MACD Strategy 3.1 (no ATR/trend filters)
-# ASCII-only
+# NT-Tech MACD Strategy 3.5
+# Optimized for SOLUSDT 5m
+# ASCII-only, deterministic, no Cyrillic
 # ================================================================
 
 class MACDStrategy:
-    """
-    NT-Tech MACD Strategy 3.1
-    - incremental MACD (fast, slow, signal)
-    - no ATR filter (handled by MetaStrategy)
-    - no trend filter (handled by MetaStrategy)
-    - O(1) per candle
-    """
+    def __init__(self, config=None):
+        # SOL-friendly MACD periods
+        self.fast = 8
+        self.slow = 17
+        self.signal = 5
 
-    def __init__(self, params=None):
-        self.params = params if isinstance(params, dict) else {}
-
-        self.fast = self.params.get("fast", 12)
-        self.slow = self.params.get("slow", 26)
-        self.signal_period = self.params.get("signal", 9)
-
-        self.cooldown_bars = self.params.get("cooldown", 3)
-        self.cooldown_counter = 0
-
-        self.position = "FLAT"
-        self.closes = []
-
-        # Incremental EMA state
+        self.prices = []
         self.ema_fast = None
         self.ema_slow = None
-        self.signal_line = None
-        self.prev_hist = None
+        self.ema_signal = None
 
-        # Smoothing constants
-        self.k_fast = 2 / (self.fast + 1)
-        self.k_slow = 2 / (self.slow + 1)
-        self.k_signal = 2 / (self.signal_period + 1)
+        self.alpha_fast = 2 / (self.fast + 1)
+        self.alpha_slow = 2 / (self.slow + 1)
+        self.alpha_signal = 2 / (self.signal + 1)
 
-    # ------------------------------------------------------------
-    # Incremental MACD update
-    # ------------------------------------------------------------
-    def update_macd(self, price):
+        self.min_history = self.slow + self.signal
+
+    def on_candle(self, c):
+        price = c["close"]
+        self.prices.append(price)
+
+        if len(self.prices) < self.min_history:
+            return None
+
+        # EMA fast
         if self.ema_fast is None:
             self.ema_fast = price
-            return None, None, None
+        else:
+            self.ema_fast = self.alpha_fast * price + (1 - self.alpha_fast) * self.ema_fast
 
+        # EMA slow
         if self.ema_slow is None:
             self.ema_slow = price
-            return None, None, None
+        else:
+            self.ema_slow = self.alpha_slow * price + (1 - self.alpha_slow) * self.ema_slow
 
-        # Update EMAs
-        self.ema_fast = price * self.k_fast + self.ema_fast * (1 - self.k_fast)
-        self.ema_slow = price * self.k_slow + self.ema_slow * (1 - self.k_slow)
+        macd = self.ema_fast - self.ema_slow
 
-        macd_line = self.ema_fast - self.ema_slow
+        # Signal line
+        if self.ema_signal is None:
+            self.ema_signal = macd
+        else:
+            self.ema_signal = self.alpha_signal * macd + (1 - self.alpha_signal) * self.ema_signal
 
-        if self.signal_line is None:
-            self.signal_line = macd_line
-            return None, None, None
+        hist = macd - self.ema_signal
 
-        self.signal_line = (
-            macd_line * self.k_signal + self.signal_line * (1 - self.k_signal)
-        )
-
-        hist = macd_line - self.signal_line
-        return macd_line, self.signal_line, hist
-
-    # ------------------------------------------------------------
-    # Main signal
-    # ------------------------------------------------------------
-    def on_candle(self, candle):
-        price = candle.get("close")
-        if price is None:
+        # weak-signal filter
+        if abs(hist) < 0.05:
             return None
 
-        self.closes.append(price)
-
-        if self.cooldown_counter > 0:
-            self.cooldown_counter -= 1
-            return None
-
-        if len(self.closes) < self.slow + 5:
-            return None
-
-        macd_line, signal_line, hist = self.update_macd(price)
-        if macd_line is None or signal_line is None or hist is None:
-            return None
-
-        if self.prev_hist is None:
-            self.prev_hist = hist
-            return None
-
-        buy_cross = self.prev_hist <= 0 and hist > 0
-        sell_cross = self.prev_hist >= 0 and hist < 0
-
-        self.prev_hist = hist
-
-        if buy_cross and self.position != "LONG":
-            self.position = "LONG"
-            self.cooldown_counter = self.cooldown_bars
+        # BUY
+        if hist > 0 and macd > self.ema_signal:
             return "BUY"
 
-        if sell_cross and self.position != "SHORT":
-            self.position = "SHORT"
-            self.cooldown_counter = self.cooldown_bars
+        # SELL
+        if hist < 0 and macd < self.ema_signal:
             return "SELL"
 
         return None

@@ -1,161 +1,173 @@
 # ================================================================
 # File: bot_ai/engine/backtest_engine.py
-# NT-Tech Backtest Engine 3.0 (Spot-only, MetaStrategy 2.2)
-# ASCII-only
+# NT-Tech Backtest Engine 4.2 (ASCII-only)
+# Deterministic backtesting engine for LiveEngine 3.1
+# CSV format: open_time, open, high, low, close, volume
 # ================================================================
 
-import math
-from bot_ai.strategy.meta_strategy import MetaStrategy
+import csv
+from bot_ai.engine.live_engine import LiveEngine
 
 
 class BacktestEngine:
-    """
-    NT-Tech Backtest Engine 3.0
-    Spot-only:
-        - only OPEN_LONG / CLOSE_LONG
-        - ATR-based SL/TP handled by MetaStrategy
-        - no short positions
-        - no OrderEngine
-        - no RiskManager
-    """
+    def __init__(self, initial_balance=10000.0):
+        self.engine = LiveEngine()
+        self.initial_balance = float(initial_balance)
 
-    def __init__(self, config, candles):
-        self.config = config
-        self.candles = candles if isinstance(candles, list) else []
+        self.balance = float(initial_balance)
+        self.equity = float(initial_balance)
 
-        # MetaStrategy receives full config
-        self.meta = MetaStrategy(config)
-
-        # initial balance from config
-        self.balance = float(config.get("initial_balance", 10000.0))
-
-        self.position = "FLAT"
+        self.position = None
         self.entry_price = None
         self.position_size = 0.0
 
         self.equity_curve = []
         self.trades = []
 
+        self.max_equity = float(initial_balance)
+        self.max_drawdown = 0.0
+
     # ------------------------------------------------------------
-    # Equity calculation
+    # Load candles from CSV (Binance-compatible, safe parsing)
+    # ------------------------------------------------------------
+    def load_candles(self, path):
+        candles = []
+        with open(path, "r") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+
+                # read timestamp or open_time
+                ts = row.get("timestamp") or row.get("open_time")
+
+                # skip rows without timestamp
+                if ts is None or ts.strip() == "":
+                    continue
+
+                try:
+                    ts_val = int(float(ts))
+                except:
+                    continue
+
+                try:
+                    o = float(row["open"])
+                    h = float(row["high"])
+                    l = float(row["low"])
+                    c = float(row["close"])
+                    v = float(row["volume"])
+                except:
+                    continue
+
+                candles.append({
+                    "timestamp": ts_val,
+                    "open": o,
+                    "high": h,
+                    "low": l,
+                    "close": c,
+                    "volume": v
+                })
+
+        return candles
+
+    # ------------------------------------------------------------
+    # Compute equity
     # ------------------------------------------------------------
     def compute_equity(self, price):
-        if self.position == "FLAT":
+        if self.position is None:
             return self.balance
         return self.balance + (price - self.entry_price) * self.position_size
 
     # ------------------------------------------------------------
-    # Trade execution
+    # Execute trade actions
     # ------------------------------------------------------------
-    def open_long(self, price):
-        if price <= 0:
-            return
-        self.position = "LONG"
-        self.entry_price = price
-        self.position_size = self.balance / price
-
-    def close_long(self, price, reason):
-        if self.position != "LONG":
+    def handle_risk_action(self, action, price, timestamp):
+        if action is None:
             return
 
-        exit_value = self.position_size * price
-        pnl = exit_value - self.balance
+        act = action["action"]
 
-        self.trades.append({
-            "entry": self.entry_price,
-            "exit": price,
-            "pnl": pnl,
-            "reason": str(reason).encode("ascii", errors="ignore").decode("ascii")
-        })
+        if act == "OPEN_LONG" and self.position is None:
+            self.position = "LONG"
+            self.entry_price = price
+            self.position_size = self.balance / price
 
-        self.balance = exit_value
-        self.position = "FLAT"
-        self.entry_price = None
-        self.position_size = 0.0
+            self.trades.append({
+                "type": "OPEN_LONG",
+                "price": price,
+                "timestamp": timestamp
+            })
+            return
+
+        if act.startswith("CLOSE_LONG") and self.position == "LONG":
+            exit_value = self.position_size * price
+            pnl = exit_value - self.balance
+
+            self.trades.append({
+                "type": act,
+                "entry": self.entry_price,
+                "exit": price,
+                "pnl": pnl,
+                "timestamp": timestamp
+            })
+
+            self.balance = exit_value
+            self.position = None
+            self.entry_price = None
+            self.position_size = 0.0
 
     # ------------------------------------------------------------
     # Main loop
     # ------------------------------------------------------------
-    def run(self):
-        # deterministic ordering
-        try:
-            self.candles.sort(key=lambda x: x["open_time"])
-        except Exception:
-            pass
+    def run(self, path):
+        candles = self.load_candles(path)
 
-        for candle in self.candles:
-            price = candle.get("close", 0.0)
-            try:
-                price = float(price)
-            except Exception:
-                continue
+        for c in candles:
+            price = c["close"]
+            timestamp = c["timestamp"]
 
-            signal = self.meta.on_candle(candle)
+            result = self.engine.on_candle(c)
+            risk_action = result["risk_action"]
 
-            if signal is not None:
-                sig = signal.get("signal")
+            self.handle_risk_action(risk_action, price, timestamp)
 
-                if sig == "OPEN_LONG" and self.position == "FLAT":
-                    self.open_long(price)
+            self.equity = self.compute_equity(price)
+            self.equity_curve.append(self.equity)
 
-                elif sig == "CLOSE_LONG" and self.position == "LONG":
-                    self.close_long(price, signal.get("reason"))
+            if self.equity > self.max_equity:
+                self.max_equity = self.equity
 
-            self.equity_curve.append(self.compute_equity(price))
+            dd = self.max_equity - self.equity
+            if dd > self.max_drawdown:
+                self.max_drawdown = dd
 
-        # Close open position at end
         if self.position == "LONG":
-            last_price = self.candles[-1]["close"]
-            self.close_long(last_price, "end_of_data")
+            last_price = candles[-1]["close"]
+            self.handle_risk_action(
+                {"action": "CLOSE_LONG_META", "price": last_price},
+                last_price,
+                candles[-1]["timestamp"]
+            )
 
-        return self.metrics()
+        return self.summary()
 
     # ------------------------------------------------------------
-    # Metrics
+    # Summary
     # ------------------------------------------------------------
-    def metrics(self):
-        if not self.trades:
-            return {
-                "net_profit": 0.0,
-                "winrate_pct": 0.0,
-                "sharpe": 0.0,
-                "max_drawdown": 0.0,
-                "trades": 0
-            }
+    def summary(self):
+        wins = sum(1 for t in self.trades if t.get("pnl", 0) > 0)
+        losses = sum(1 for t in self.trades if t.get("pnl", 0) < 0)
+        total = wins + losses
 
-        initial_balance = float(self.config.get("initial_balance", 10000.0))
-        net_profit = self.balance - initial_balance
-
-        wins = sum(1 for t in self.trades if t["pnl"] > 0)
-        winrate = (wins / len(self.trades)) * 100.0
-
-        returns = []
-        for i in range(1, len(self.equity_curve)):
-            prev = self.equity_curve[i - 1]
-            curr = self.equity_curve[i]
-            if prev > 0:
-                returns.append((curr - prev) / prev)
-
-        if len(returns) > 1:
-            mean_r = sum(returns) / len(returns)
-            std_r = math.sqrt(sum((r - mean_r) ** 2 for r in returns) / len(returns))
-            sharpe = (mean_r / std_r) * math.sqrt(252) if std_r > 0 else 0.0
-        else:
-            sharpe = 0.0
-
-        peak = -1e9
-        max_dd = 0.0
-        for eq in self.equity_curve:
-            if eq > peak:
-                peak = eq
-            dd = (peak - eq) / peak if peak > 0 else 0.0
-            if dd > max_dd:
-                max_dd = dd
+        winrate = (wins / total * 100) if total > 0 else 0.0
 
         return {
-            "net_profit": round(net_profit, 2),
+            "initial_balance": self.initial_balance,
+            "final_balance": self.balance,
+            "net_profit": self.balance - self.initial_balance,
+            "trades": len(self.trades),
+            "wins": wins,
+            "losses": losses,
             "winrate_pct": round(winrate, 2),
-            "sharpe": round(sharpe, 4),
-            "max_drawdown": round(max_dd, 4),
-            "trades": len(self.trades)
+            "max_drawdown": round(self.max_drawdown, 4),
+            "equity_curve": self.equity_curve,
+            "trade_log": self.trades
         }
