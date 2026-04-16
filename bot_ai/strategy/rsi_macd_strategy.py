@@ -1,7 +1,8 @@
 # ================================================================
 # File: bot_ai/strategy/rsi_macd_strategy.py
-# NT-Tech Hybrid RSI + MACD Strategy
-# ASCII-only
+# NT-Tech Hybrid RSI + MACD Strategy (optimized, MetaStrategy-compatible)
+# O(1) per candle, no series recomputation
+# ASCII-only, deterministic
 # ================================================================
 
 from bot_ai.strategy.base_strategy import BaseStrategy
@@ -16,6 +17,7 @@ class RSIMACDStrategy(BaseStrategy):
 
     def __init__(self, params=None):
         super().__init__(params)
+
         self.rsi_period = int(self.params.get("rsi_period", 14))
         self.overbought = float(self.params.get("overbought", 70))
         self.oversold = float(self.params.get("oversold", 30))
@@ -24,90 +26,96 @@ class RSIMACDStrategy(BaseStrategy):
         self.slow = int(self.params.get("slow", 26))
         self.signal_period = int(self.params.get("signal", 9))
 
-    # ------------------------------------------------------------
-    # RSI
-    # ------------------------------------------------------------
-    def compute_rsi(self):
-        if len(self.prices) < self.rsi_period + 1:
-            return None
+        self.prices = []
+        self.regime = None
 
-        gains = []
-        losses = []
+        self.avg_gain = None
+        self.avg_loss = None
 
-        for i in range(-self.rsi_period, 0):
-            diff = self.prices[i] - self.prices[i - 1]
-            if diff >= 0:
-                gains.append(diff)
-                losses.append(0)
+        self.fast_ema = None
+        self.slow_ema = None
+        self.macd = None
+        self.signal_ema = None
+
+        self.prev_macd = None
+        self.prev_signal = None
+
+        self.fast_k = 2.0 / (self.fast + 1.0)
+        self.slow_k = 2.0 / (self.slow + 1.0)
+        self.signal_k = 2.0 / (self.signal_period + 1.0)
+
+    # ------------------------------------------------------------
+    # Optional regime hook
+    # ------------------------------------------------------------
+    def set_regime(self, regime):
+        self.regime = regime
+
+    # ------------------------------------------------------------
+    # Main candle handler (MetaStrategy-compatible)
+    # ------------------------------------------------------------
+    def on_candle(self, candle):
+        price = candle["close"]
+        self.prices.append(price)
+
+        # --------------------------------------------------------
+        # RSI (rolling)
+        # --------------------------------------------------------
+        if len(self.prices) >= 2:
+            diff = self.prices[-1] - self.prices[-2]
+            gain = diff if diff > 0 else 0.0
+            loss = -diff if diff < 0 else 0.0
+
+            if self.avg_gain is None:
+                if len(self.prices) < self.rsi_period + 1:
+                    return None
+                gains = []
+                losses = []
+                for i in range(-self.rsi_period, 0):
+                    d = self.prices[i] - self.prices[i - 1]
+                    gains.append(d if d > 0 else 0.0)
+                    losses.append(-d if d < 0 else 0.0)
+                self.avg_gain = sum(gains) / float(self.rsi_period)
+                self.avg_loss = sum(losses) / float(self.rsi_period)
             else:
-                gains.append(0)
-                losses.append(-diff)
+                self.avg_gain = (self.avg_gain * (self.rsi_period - 1) + gain) / float(self.rsi_period)
+                self.avg_loss = (self.avg_loss * (self.rsi_period - 1) + loss) / float(self.rsi_period)
 
-        avg_gain = sum(gains) / self.rsi_period
-        avg_loss = sum(losses) / self.rsi_period
-
-        if avg_loss == 0:
-            return 100
-
-        rs = avg_gain / avg_loss
-        return 100 - (100 / (1 + rs))
-
-    # ------------------------------------------------------------
-    # EMA helper
-    # ------------------------------------------------------------
-    def ema(self, values, period):
-        if len(values) < period:
-            return None
-        k = 2 / (period + 1)
-        ema_val = sum(values[:period]) / period
-        for v in values[period:]:
-            ema_val = v * k + ema_val * (1 - k)
-        return ema_val
-
-    # ------------------------------------------------------------
-    # MACD
-    # ------------------------------------------------------------
-    def compute_macd(self):
-        if len(self.prices) < self.slow + self.signal_period:
-            return None, None
-
-        fast_ema = self.ema(self.prices, self.fast)
-        slow_ema = self.ema(self.prices, self.slow)
-
-        if fast_ema is None or slow_ema is None:
-            return None, None
-
-        macd = fast_ema - slow_ema
-
-        macd_series = []
-        for i in range(len(self.prices)):
-            f = self.ema(self.prices[: i + 1], self.fast)
-            s = self.ema(self.prices[: i + 1], self.slow)
-            if f is not None and s is not None:
-                macd_series.append(f - s)
-
-        if len(macd_series) < self.signal_period:
-            return macd, None
-
-        signal = self.ema(macd_series, self.signal_period)
-        return macd, signal
-
-    # ------------------------------------------------------------
-    # Combined signal
-    # ------------------------------------------------------------
-    def signal(self):
-        rsi = self.compute_rsi()
-        macd, signal = self.compute_macd()
-
-        if rsi is None or macd is None or signal is None:
+            if self.avg_loss == 0.0:
+                rsi = 100.0
+            else:
+                rs = self.avg_gain / self.avg_loss
+                rsi = 100.0 - (100.0 / (1.0 + rs))
+        else:
             return None
 
-        prev_macd, prev_signal = self.compute_macd()
-        if prev_macd is None or prev_signal is None:
+        # --------------------------------------------------------
+        # MACD (incremental EMA)
+        # --------------------------------------------------------
+        if self.fast_ema is None:
+            if len(self.prices) < self.slow:
+                return None
+            self.fast_ema = price
+            self.slow_ema = price
             return None
 
-        macd_cross_up = prev_macd <= prev_signal and macd > signal
-        macd_cross_down = prev_macd >= prev_signal and macd < signal
+        self.fast_ema = price * self.fast_k + self.fast_ema * (1.0 - self.fast_k)
+        self.slow_ema = price * self.slow_k + self.slow_ema * (1.0 - self.slow_k)
+
+        macd = self.fast_ema - self.slow_ema
+
+        if self.signal_ema is None:
+            self.signal_ema = macd
+            self.prev_macd = macd
+            self.prev_signal = self.signal_ema
+            return None
+
+        self.signal_ema = macd * self.signal_k + self.signal_ema * (1.0 - self.signal_k)
+
+        macd_cross_up = self.prev_macd <= self.prev_signal and macd > self.signal_ema
+        macd_cross_down = self.prev_macd >= self.prev_signal and macd < self.signal_ema
+
+        self.prev_macd = macd
+        self.prev_signal = self.signal_ema
 
         if rsi <= self.oversold and macd_cross_up:
             return "BUY"

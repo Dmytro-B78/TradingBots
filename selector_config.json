@@ -1,0 +1,19 @@
+{
+  "screening": {
+    "interval_sec": 300,
+    "max_pairs": 200,
+    "top_n_screened": 10
+  },
+
+  "backtest": {
+    "interval_sec": 3600,
+    "lookback_candles": 5000,
+    "top_n_final": 3,
+    "candles_path": "C:/TradingBots/candles/compiled"
+  },
+
+  "metrics": {
+    "min_liquidity_usd": 500000,
+    "max_spread_pct": 0.30
+  }
+}

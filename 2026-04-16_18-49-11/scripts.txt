@@ -1,0 +1,15 @@
+
+FullName
+--------
+C:\TradingBots\NT\scripts\install.ps1
+C:\TradingBots\NT\scripts\run_backtest.ps1
+C:\TradingBots\NT\scripts\run_dry.ps1
+C:\TradingBots\NT\scripts\run_live.ps1
+C:\TradingBots\NT\scripts\run_optimizer_report.ps1
+C:\TradingBots\NT\scripts\run_optimizer.ps1
+C:\TradingBots\NT\scripts\test_backtest_engine.ps1
+C:\TradingBots\NT\scripts\test_install.ps1
+C:\TradingBots\NT\scripts\test_meta_strategy_debug.ps1
+C:\TradingBots\NT\scripts\test_meta_strategy.ps1
+C:\TradingBots\NT\scripts\test_meta_strategy.py
+

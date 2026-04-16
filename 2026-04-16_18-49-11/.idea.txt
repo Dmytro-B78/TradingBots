@@ -1,0 +1,10 @@
+
+FullName
+--------
+C:\TradingBots\NT\.idea\inspectionProfiles
+C:\TradingBots\NT\.idea\NT.iml
+C:\TradingBots\NT\.idea\vcs.xml
+C:\TradingBots\NT\.idea\workspace.xml
+C:\TradingBots\NT\.idea\inspectionProfiles\profiles_settings.xml
+C:\TradingBots\NT\.idea\inspectionProfiles\Project_Default.xml
+

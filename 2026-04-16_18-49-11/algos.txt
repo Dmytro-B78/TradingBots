@@ -1,0 +1,6 @@
+
+FullName
+--------
+C:\TradingBots\NT\algos\mean_reversion_strategy.py
+C:\TradingBots\NT\algos\rsi_macd.py
+

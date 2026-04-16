@@ -1,0 +1,6 @@
+
+FullName
+--------
+C:\TradingBots\NT\.pytest_cache\v
+C:\TradingBots\NT\.pytest_cache\v\cache
+

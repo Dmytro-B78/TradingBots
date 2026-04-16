@@ -1,7 +1,7 @@
 # ================================================================
 # File: bot_ai/strategy/mean_reversion_strategy.py
-# NT-Tech Mean Reversion Strategy
-# ASCII-only
+# NT-Tech Mean Reversion Strategy (MetaStrategy-compatible)
+# ASCII-only, deterministic
 # ================================================================
 
 from bot_ai.strategy.base_strategy import BaseStrategy
@@ -19,6 +19,14 @@ class MeanReversionStrategy(BaseStrategy):
         super().__init__(params)
         self.period = int(self.params.get("period", 20))
         self.threshold = float(self.params.get("threshold", 2.0))
+        self.prices = []
+        self.regime = None
+
+    # ------------------------------------------------------------
+    # Optional regime hook (used by MetaStrategy if available)
+    # ------------------------------------------------------------
+    def set_regime(self, regime):
+        self.regime = regime
 
     # ------------------------------------------------------------
     # Simple moving average
@@ -26,7 +34,7 @@ class MeanReversionStrategy(BaseStrategy):
     def sma(self, values):
         if len(values) < self.period:
             return None
-        return sum(values[-self.period:]) / self.period
+        return sum(values[-self.period:]) / float(self.period)
 
     # ------------------------------------------------------------
     # Standard deviation
@@ -35,21 +43,27 @@ class MeanReversionStrategy(BaseStrategy):
         if len(values) < self.period:
             return None
         mean = self.sma(values)
-        var = sum((v - mean) ** 2 for v in values[-self.period:]) / self.period
+        if mean is None:
+            return None
+        var = sum((v - mean) ** 2 for v in values[-self.period:]) / float(self.period)
         return math.sqrt(var)
 
     # ------------------------------------------------------------
-    # Mean reversion signal
+    # Main candle handler (MetaStrategy-compatible)
+    # Expects candle: dict with at least "close" key
+    # Returns: "BUY", "SELL" or None
     # ------------------------------------------------------------
-    def signal(self):
+    def on_candle(self, candle):
+        price = candle["close"]
+        self.prices.append(price)
+
         if len(self.prices) < self.period:
             return None
 
         mean = self.sma(self.prices)
         sd = self.std(self.prices)
-        price = self.prices[-1]
 
-        if mean is None or sd is None or sd == 0:
+        if mean is None or sd is None or sd == 0.0:
             return None
 
         z = (price - mean) / sd
