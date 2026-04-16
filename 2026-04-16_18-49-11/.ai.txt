@@ -1,0 +1,6 @@
+
+FullName
+--------
+C:\TradingBots\NT\.ai\mcp
+C:\TradingBots\NT\.ai\mcp\mcp.json
+

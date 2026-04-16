@@ -1,15 +1,15 @@
 # ================================================================
-# File: scripts/test_meta_strategy_debug.ps1
-# NT-Tech MetaStrategy Diagnostic Tester 3.1 (Fixed)
-# - Uses 5m candles by default
-# - Calls MetaStrategy.on_candle(candle, position) correctly
-# - Maintains local position state (LONG / None)
-# - Prints checkpoints with regime + last logged strategy signals
+# NT-Tech 2026 - MetaStrategy Diagnostic Tester (Extended)
+# File: C:\TradingBots\NT\scripts\test_meta_strategy_debug.ps1
 # ASCII-only, deterministic, no Cyrillic
+# Description:
+#   Diagnostic runner for MetaStrategy 8.4-M with ExtendedMetaLogger.
+#   Loads CSV candles, computes meta_state and meta_signal,
+#   prints checkpoints with internal debug info from logger.
 # ================================================================
 
 param(
-    [string]$pair = "SOLUSDT-5m.csv"
+    [string]$pair = "SOLUSDT-1h-2026-03.csv"
 )
 
 Write-Host "Running MetaStrategy diagnostic test..."
@@ -30,12 +30,19 @@ Write-Host "Using file: $csvPath"
 Write-Host "File size: $((Get-Item $csvPath).Length) bytes"
 Write-Host "===================================="
 
-Set-Content -Path __meta_debug.py -Value @"
+Set-Content -Path "__meta_debug.py" -Encoding ASCII -Value @"
+# ================================================================
+# NT-Tech 2026 - MetaStrategy Diagnostic Script (Extended)
+# File: __meta_debug.py (auto-generated)
+# ASCII-only, deterministic
+# ================================================================
+
 import os
 import time
 import csv
+from collections import defaultdict
 
-from bot_ai.strategy.meta_strategy import MetaStrategy
+from bot_ai.strategy.meta.meta_strategy import MetaStrategy
 
 path = r'$csvPath'
 fname = os.path.basename(path)
@@ -62,7 +69,6 @@ total = len(candles)
 print("Loaded candles:", total)
 
 meta = MetaStrategy({})
-
 position = None
 
 total_signals = 0
@@ -76,30 +82,31 @@ regime_counts = {
     "compression": 0
 }
 
+strategy_counters = defaultdict(lambda: {"BUY": 0, "SELL": 0})
+
 counter = 0
 start = time.time()
 
-checkpoints = [
-    50000, 100000, 150000, 200000, 250000,
-    300000, 350000, 400000, 450000, 500000
-]
+checkpoints = [50, 100, 200, 300, 400, 500]
 
-def get_last_strategy_signals(logger):
-    for attr in ["last_strategy_signals", "last_strategy_outputs", "last_signals", "last_strategy_results"]:
-        if hasattr(logger, attr):
-            v = getattr(logger, attr)
-            if v is not None:
-                return v
-    return None
+def get_last_debug(meta_obj):
+    logger = getattr(meta_obj, "logger", None)
+    if logger is None:
+        return None
+    return getattr(logger, "last_debug", None)
 
 for c in candles:
     counter += 1
+    meta.bar_index = counter
 
-    decision = meta.on_candle(c, position)
+    state = meta.compute_meta_state(c)
+    decision = meta.compute_meta_signal(state)
 
-    r = getattr(meta, "regime", "unknown")
+    r = meta.local_regime
     if r in regime_counts:
         regime_counts[r] += 1
+
+    last_debug = get_last_debug(meta)
 
     if decision and isinstance(decision, dict):
         sig = decision.get("signal")
@@ -112,36 +119,40 @@ for c in candles:
                 close_long += 1
                 position = None
 
-    if counter % 100000 == 0:
-        elapsed = time.time() - start
-        cps = counter / elapsed if elapsed > 0 else 0.0
-        eta = (total - counter) / cps if cps > 0 else 0.0
-        print(f"Progress: {counter}/{total} | {cps:.1f} cps | ETA {eta:.1f}s")
-
     if counter in checkpoints:
         print("------------------------------------")
         print("Index:", counter)
         print("Price:", c["close"])
-        print("Regime:", getattr(meta, "regime", None))
+        print("Regime:", meta.local_regime, "/", meta.global_regime)
         print("Position:", position)
+        print("Confidence:", state["confidence"])
+        print("Momentum:", state["momentum"])
+        print("Slope:", state["slope"])
+        print("Trend:", state["trend_strength"])
+        print("ATR 1h:", state["atr_1h"])
+        print("ATR 4h:", state["atr_4h"])
+        print("MTF bias 4h:", state["mtf_bias_4h"])
 
-        last = get_last_strategy_signals(meta.logger)
-        print("Strategy signals (best-effort):")
-        if last is None:
-            print("  (no logger field found)")
+        print("Extended debug:")
+        if last_debug is None:
+            print("  (no debug info)")
         else:
-            try:
-                for item in last:
-                    if isinstance(item, (list, tuple)) and len(item) == 3:
-                        name, sig, w = item
-                        print(" ", name, "=>", sig, "(", w, ")")
-                    elif isinstance(item, (list, tuple)) and len(item) == 2:
-                        name, out = item
-                        print(" ", name, "=>", out)
-                    else:
-                        print(" ", item)
-            except Exception as e:
-                print("  (failed to print logger signals)", str(e))
+            dbg = last_debug
+            filters = dbg.get("debug", {}).get("filters")
+            stage1 = dbg.get("debug", {}).get("stage1")
+            stage2 = dbg.get("debug", {}).get("stage2")
+            intrabar = dbg.get("debug", {}).get("intrabar_stop")
+            soft_exit = dbg.get("debug", {}).get("soft_exit")
+            profit_lock = dbg.get("debug", {}).get("profit_lock")
+            decision_dbg = dbg.get("decision")
+
+            print("  filters:", filters)
+            print("  stage1:", stage1)
+            print("  stage2:", stage2)
+            print("  intrabar_stop:", intrabar)
+            print("  soft_exit:", soft_exit)
+            print("  profit_lock:", profit_lock)
+            print("  decision:", decision_dbg)
 
         print("Meta decision:", decision)
 
@@ -151,14 +162,21 @@ print("Signals:", total_signals)
 print("OPEN_LONG:", open_long)
 print("CLOSE_LONG:", close_long)
 print("Final position:", position)
-print("Final regime:", getattr(meta, "regime", None))
+print("Final regime:", meta.local_regime)
+print("====================================")
 print("Regime distribution:")
 for k in ["trend", "range", "expansion", "compression"]:
     v = regime_counts.get(k, 0)
     pct = (v / total * 100.0) if total > 0 else 0.0
     print(f"  {k:11s}: {v:9d} ({pct:6.2f}%)")
+
+print("====================================")
+print("Strategy signal counters")
+for name in sorted(strategy_counters.keys()):
+    c = strategy_counters[name]
+    print(f"{name:25s} BUY: {c['BUY']:6d}  SELL: {c['SELL']:6d}")
 print("====================================")
 "@
 
 python __meta_debug.py
-Remove-Item -Path __meta_debug.py -Force
+Remove-Item "__meta_debug.py" -Force

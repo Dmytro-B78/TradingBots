@@ -1,52 +1,94 @@
 {
-    "allow_live_trading": false,
-    "dry_run": true,
-
-    "meta_strategy": {
-        "cooldown": 3,
-        "trend_period": 50,
-        "atr_period": 14,
-        "min_atr": 0.1,
-        "sl_mult": 1.5,
-        "tp_mult": 3.0
+    "engine": {
+        "allow_live_trading": false,
+        "dry_run": true
     },
 
-    "ma_crossover": {
-        "short": 9,
-        "long": 21,
-        "type": "EMA",
-        "trend_period": 50,
-        "atr_period": 14,
-        "min_atr": 0.1,
-        "cooldown": 3
+    "selector": {
+        "all_pairs": ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT"],
+        "top_n": 3,
+        "min_volume": 50000000,
+        "reload_sec": 60
     },
 
-    "rsi": {
-        "period": 14,
-        "buy": 30,
-        "sell": 70,
-        "trend_period": 50,
-        "atr_period": 14,
-        "min_atr": 0.1,
-        "cooldown": 3
+    "backtest": {
+        "candles_path": "C:/TradingBots/candles/compiled",
+        "lookback_candles": 5000,
+        "initial_balance": 10000,
+        "timeframe": "1h"
     },
 
-    "macd": {
-        "fast": 12,
-        "slow": 26,
-        "signal": 9,
-        "trend_period": 50,
-        "atr_period": 14,
-        "min_atr": 0.1,
-        "cooldown": 3
+    "live": {
+        "dry_run": true,
+        "api_enabled": false,
+        "allow_live_trading": false,
+        "require_manual_confirm": true,
+        "cooldown_sec": 5,
+        "max_slippage_pct": 0.2,
+        "max_position_size_usdt": 500
     },
 
-    "bollinger": {
-        "period": 20,
-        "mult": 2.0,
-        "trend_period": 50,
-        "atr_period": 14,
-        "min_atr": 0.1,
-        "cooldown": 3
+    "risk": {
+        "daily_loss_limit": 0.03,
+        "weekly_loss_limit": 0.07,
+        "kill_switch": true,
+
+        "risk_engine": {
+            "initial_equity": 10000.0,
+
+            "base_risk_pct": 0.0075,
+            "max_risk_pct": 0.015,
+            "min_risk_pct": 0.0025,
+
+            "stop_mult_base": 1.8,
+            "stop_mult_low_vol": 1.4,
+            "stop_mult_high_vol": 2.2,
+            "stop_mult_extreme_vol": 2.8,
+
+            "atr_ratio_shock": 2.5,
+            "shock_risk_scale": 0.5,
+
+            "trend_risk_boost": 1.1,
+            "range_risk_scale": 0.8,
+            "compression_risk_scale": 0.6,
+            "expansion_risk_scale": 1.0,
+
+            "max_exposure_pct": 0.30
+        }
+    },
+
+    "strategy": {
+        "name": "meta_strategy",
+        "params": {
+            "use_mtf": true,
+            "use_atr": true
+        }
+    },
+
+    "optimizer": {
+        "enabled": false,
+        "output_dir": "logs/optimizer",
+
+        "sweep": {
+            "ema_fast": [5, 8, 10, 12, 14],
+            "ema_slow": [20, 30, 40, 50, 60],
+
+            "atr_period": [7, 10, 14, 21],
+            "atr_mult": [1.5, 2.0, 2.5, 3.0],
+
+            "breakout_k": [1.5, 2.0, 2.5, 3.0],
+            "impulse_thr": [0.5, 1.0, 1.5, 2.0],
+
+            "stop_loss_pct": [0.5, 1.0, 1.5, 2.0],
+            "take_profit_pct": [1.0, 2.0, 3.0, 4.0],
+
+            "trailing_mult": [1.0, 1.2, 1.4, 1.6]
+        },
+
+        "constraints": {
+            "max_combinations": 500,
+            "min_trades": 20,
+            "max_drawdown_pct": 25
+        }
     }
 }

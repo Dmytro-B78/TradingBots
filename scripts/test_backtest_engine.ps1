@@ -1,7 +1,7 @@
 # ================================================================
-# File: scripts/test_backtest_engine.ps1
-# NT-Tech Backtester Runner 2.0 (ASCII-only)
-# Runs BacktestEngine 4.0 on a CSV file
+# NT-Tech Backtest Engine Tester
+# ASCII-only, no Cyrillic
+# Runs BacktestEngine on a single CSV pair
 # ================================================================
 
 param(
@@ -10,28 +10,40 @@ param(
 )
 
 Write-Host "====================================================="
-Write-Host "NT-Tech Backtester Runner 2.0"
-Write-Host "Engine: BacktestEngine 4.0"
-Write-Host "CSV File: $pair"
+Write-Host "NT-Tech Backtest Engine Tester"
+Write-Host ("Pair: {0}" -f $pair)
 Write-Host "====================================================="
 
-# Python runner script (inline, ASCII-only)
-$runner = @"
+$env:PYTHONPATH = "C:\TradingBots\NT"
+
+python - << 'EOF'
 import json
-from bot_ai.engine.backtest_engine import BacktestEngine
+import os
+import sys
+from bot_ai.backtest.backtest_engine import BacktestEngine
 
-engine = BacktestEngine(initial_balance=10000.0)
-result = engine.run(r"$pair")
+# Read pair from PowerShell argument
+pair = sys.argv[1]
+
+csv_path = f"C:/TradingBots/candles/compiled/{pair}-1h.csv"
+
+if not os.path.exists(csv_path):
+    print(f"CSV file not found: {csv_path}")
+    sys.exit(1)
+
+engine = BacktestEngine(
+    symbol=pair,
+    interval="1h",
+    start_date=None,
+    end_date=None,
+    initial_balance=10000.0,
+    strategy=None
+)
+
+result = engine.run(csv_path)
+
 print(json.dumps(result))
-"@
-
-# Save runner to temp file
-$tempFile = "$env:TEMP\nt_backtest_runner.py"
-Set-Content -Path $tempFile -Value $runner -Encoding ASCII
-
-# Execute Python
-Write-Host "Running backtest..."
-$json = python $tempFile
+EOF $pair
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error: Python execution failed."

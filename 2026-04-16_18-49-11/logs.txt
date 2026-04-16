@@ -1,0 +1,12 @@
+
+FullName
+--------
+C:\TradingBots\NT\logs\strategies
+C:\TradingBots\NT\logs\live_log.txt
+C:\TradingBots\NT\logs\live_log.txt.20260407_104515.bak
+C:\TradingBots\NT\logs\live_trades.csv
+C:\TradingBots\NT\logs\night_backtest.log
+C:\TradingBots\NT\logs\nt_tech.log
+C:\TradingBots\NT\logs\offline_log.txt
+C:\TradingBots\NT\logs\signal_log.txt
+

@@ -1,16 +1,15 @@
 # ================================================================
 # NT-Tech test_meta_strategy.ps1
-# Full-dataset MetaStrategy 3.0 tester
-# ASCII-only, deterministic, no Cyrillic
-# No nested here-strings
+# MetaStrategy tester (ASCII-only)
+# No Cyrillic, no nested here-strings
 # ================================================================
 
-Write-Host "Testing MetaStrategy 3.0 on full dataset..."
+Write-Host "Testing MetaStrategy on dataset..."
 Write-Host "============================================"
 
 $temp = "__meta_test.py"
 
-Set-Content $temp @"
+Set-Content -Path $temp -Value @"
 import os
 import time
 import csv
@@ -77,7 +76,7 @@ for fname in files:
     print("CLOSE_LONG:", close_long)
     print("Final regime:", meta.regime)
     print("====================================")
-"@
+"@ -Encoding ASCII
 
 python $temp
 Remove-Item $temp -Force

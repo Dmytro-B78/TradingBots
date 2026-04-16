@@ -1,0 +1,1 @@
+# NT-Tech strategy package
