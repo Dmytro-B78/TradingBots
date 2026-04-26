@@ -1,316 +1,332 @@
 # ================================================================
-# NT-Tech 2026 - MetaStrategy 9.0 (Thin Orchestrator)
-# File: bot_ai/strategy/meta/meta_strategy.py
-# ASCII-only, deterministic, no Cyrillic
+# File: C:\TradingBots\NT\bot_ai\strategy\meta\meta_strategy.py
+# NT-Tech 2026 - MetaStrategy Core
+# Stage1-Lite, Stage2-Lite v2, Re-Entry Engine,
+# ATR-Trail 2.0 with Initial Wide Stop, new confidence model
+# Integrated Stage 2.2: MetaSignalFilter (smoothing, hysteresis, 2-bar exit confirm)
+# ASCII-only, deterministic
 # ================================================================
 
-from .indicators import update_indicators
-from .regimes import update_regimes
 from .stage1 import stage1_check
 from .stage2 import stage2_check
-from .exits import (
-    exit_profit_lock,
-    exit_soft,
-    compute_dynamic_rr,
-    smooth_soft_exit,
-    modulate_soft_exit_raw,
-)
-from .intrabar_stops import (
-    intrabar_abs_stop,
-    intrabar_hwm_stop,
-    intrabar_atr_trail,
-    intrabar_ema_stop,
-    adjust_trailing_mult_by_regime,
-)
-from ..filters import apply_meta_filters
-from .extended_logger import ExtendedMetaLogger
+from .entry_engine import compute_entry_signal
+from .trail_engine import trail_engine
+from .indicators import update_indicators
+from .meta_signal_filter import MetaSignalFilter
 
 
 class MetaStrategy:
-    def __init__(self, config=None):
-        config = config or {}
-
-        # --------------------------------------------------------
-        # Core parameters
-        # --------------------------------------------------------
-        self.ema_fast_len = int(config.get("ema_fast_len", 30))
-        self.ema_slow_len = int(config.get("ema_slow_len", 90))
-        self.ema_trend_len = int(config.get("ema_trend_len", 180))
-
-        self.atr_1h_alpha = float(config.get("atr_1h_alpha", 2.0 / 30.0))
-        self.atr_4h_alpha = float(config.get("atr_4h_alpha", 2.0 / 120.0))
-
-        self.ema_conf_alpha = float(config.get("ema_conf_alpha", 0.06))
-
-        # Aggression factor
-        self.aggression_factor = float(config.get("aggression_factor", 0.45))
-
-        # Stage thresholds (scaled)
-        self.s1_min_conf = float(config.get("s1_min_conf", 0.03)) * self.aggression_factor
-        self.s1_min_trend = float(config.get("s1_min_trend", 0.03)) * self.aggression_factor
-        self.s1_min_slope = float(config.get("s1_min_slope", 0.010)) * self.aggression_factor
-        self.s1_min_momentum = float(config.get("s1_min_momentum", 0.010)) * self.aggression_factor
-
-        self.s2_min_conf = float(config.get("s2_min_conf", 0.08)) * self.aggression_factor
-        self.s2_min_trend = float(config.get("s2_min_trend", 0.06)) * self.aggression_factor
-        self.s2_min_slope = float(config.get("s2_min_slope", 0.018)) * self.aggression_factor
-        self.s2_min_momentum = float(config.get("s2_min_momentum", 0.035)) * self.aggression_factor
-        self.s2_min_mtf_bias_4h = float(config.get("s2_min_mtf_bias_4h", 0.05)) * self.aggression_factor
-
-        self.impulse_window = int(config.get("impulse_window", 2))
-
-        # Exit parameters
-        self.momentum_exit_threshold = float(config.get("momentum_exit_threshold", -0.05))
-        self.atr_profit_lock_rr = float(config.get("atr_profit_lock_rr", 1.5))
-        self.ema_fast_stop_mult = float(config.get("ema_fast_stop_mult", 1.0))
-        self.close_thr = float(config.get("close_thr", 0.05))
-
-        self.abs_loss_stop_pct = float(config.get("abs_loss_stop_pct", -0.06))
-        self.hwm_drawdown_stop_pct = float(config.get("hwm_drawdown_stop_pct", -0.06))
-        self.atr_trail_mult = float(config.get("atr_trail_mult", 1.2))
-
-        # Soft-exit smoothing
-        self.soft_exit_alpha = 0.25
-        self.soft_exit_ema = None
-
-        # Entry streak
-        self.open_condition_streak = 0
-        self.required_streak = int(config.get("required_streak", 1))
-
-        # --------------------------------------------------------
-        # State
-        # --------------------------------------------------------
+    def __init__(self, params=None):
+        # Position state
         self.position = None
         self.entry_price = None
         self.entry_bar_index = None
-        self.bar_index = 0
         self.max_price_since_entry = None
 
+        self.last_exit_reason = None
+        self.last_exit_bar_index = None
+
+        self.open_condition_streak = 0
+        self.required_streak = 1
+
+        self.bar_index = 0
+
+        # OHLC cache
+        self.last_close = None
         self.last_open = None
         self.last_high = None
         self.last_low = None
-        self.last_close = None
 
+        self.prev_close = None
         self.prev_open = None
         self.prev_high = None
         self.prev_low = None
-        self.prev_close = None
 
-        self.prev_ema_fast = None
+        # EMA lengths (NT-Tech 2026 standard)
+        self.ema_fast_len = 10
+        self.ema_slow_len = 30
+        self.ema_trend_len = 90
 
+        # EMA values
         self.ema_fast = None
+        self.prev_ema_fast = None
         self.ema_slow = None
         self.ema_trend = None
 
+        # ATR settings
         self.atr_1h = None
         self.atr_4h = None
         self.atr_1h_mean = None
         self.atr_4h_mean = None
+        self.atr_1h_alpha = 0.10
+        self.atr_4h_alpha = 0.025
 
-        self.local_regime = None
-        self.global_regime = None
-        self.atr_regime_1h = None
-        self.atr_regime_4h = None
-        self.mtf_bias_4h = 0.0
-
+        # Derived indicators
         self.trend_strength = 0.0
         self.slope = 0.0
         self.momentum = 0.0
 
+        # Histories
         self.momentum_hist = []
         self.slope_hist = []
         self.trend_hist = []
 
-        self.ema_conf = None
+        # MTF bias
+        self.mtf_bias_4h = 0.0
 
-        self.logger = ExtendedMetaLogger()
+        # Regimes (needed by stage1/stage2/entry_engine)
+        self.atr_regime_1h = "normal"
+        self.atr_regime_4h = "normal"
+        self.local_regime = "normal"
+        self.global_regime = "normal"
+
+        # Confidence (NT-Tech 2026 model)
+        self.confidence = 0.0
+        self._confidence_ema = None
+
+        # Meta-signal filter (Stage 2.2)
+        self.meta_filter = MetaSignalFilter()
 
     # ------------------------------------------------------------
-    def _compute_raw_confidence(self):
-        regime_score = 0.05 if self.global_regime == "trend" else -0.05 if self.global_regime == "expansion" else 0.0
-        raw = (
-            0.5 * self.trend_strength +
-            0.3 * self.slope +
-            0.2 * self.momentum +
-            regime_score
-        )
-        return max(min(raw, 1.0), -1.0)
+    # Internal: update max price since entry
+    # ------------------------------------------------------------
+    def update_state(self, candle_close):
+        if self.position == "LONG":
+            if self.max_price_since_entry is None:
+                self.max_price_since_entry = candle_close
+            else:
+                if candle_close > self.max_price_since_entry:
+                    self.max_price_since_entry = candle_close
 
+    # ------------------------------------------------------------
+    # Compute ATR regimes and volatility regimes
+    # ------------------------------------------------------------
+    def _compute_regimes(self):
+        atr_1h = self.atr_1h
+        atr_4h = self.atr_4h
+        atr_1h_mean = self.atr_1h_mean
+        atr_4h_mean = self.atr_4h_mean
+
+        atr_regime_1h = "normal"
+        atr_regime_4h = "normal"
+
+        if atr_1h is not None and atr_1h_mean is not None and atr_1h_mean > 0:
+            ratio_1h = atr_1h / atr_1h_mean
+            if ratio_1h > 1.5:
+                atr_regime_1h = "high"
+            elif ratio_1h < 0.75:
+                atr_regime_1h = "low"
+
+        if atr_4h is not None and atr_4h_mean is not None and atr_4h_mean > 0:
+            ratio_4h = atr_4h / atr_4h_mean
+            if ratio_4h > 1.5:
+                atr_regime_4h = "high"
+            elif ratio_4h < 0.75:
+                atr_regime_4h = "low"
+
+        local_regime = atr_regime_1h
+        global_regime = atr_regime_4h
+
+        # store on strategy for stage1/stage2/entry_engine
+        self.atr_regime_1h = atr_regime_1h
+        self.atr_regime_4h = atr_regime_4h
+        self.local_regime = local_regime
+        self.global_regime = global_regime
+
+        return atr_regime_1h, atr_regime_4h, local_regime, global_regime
+
+    # ------------------------------------------------------------
+    # Compute confidence (NT-Tech 2026 model)
+    # ------------------------------------------------------------
+    def _update_confidence(self):
+        ts = self.trend_strength if self.trend_strength is not None else 0.0
+        sl = self.slope if self.slope is not None else 0.0
+        mom = self.momentum if self.momentum is not None else 0.0
+
+        confidence_raw = 0.4 * ts + 0.3 * sl + 0.3 * mom
+
+        alpha = 0.20
+        if self._confidence_ema is None:
+            self._confidence_ema = confidence_raw
+        else:
+            self._confidence_ema = alpha * confidence_raw + (1.0 - alpha) * self._confidence_ema
+
+        self.confidence = float(self._confidence_ema)
+
+    # ------------------------------------------------------------
+    # Build meta_state from current indicators and candle
     # ------------------------------------------------------------
     def compute_meta_state(self, candle):
         update_indicators(self, candle)
-        update_regimes(self)
 
-        raw_conf = self._compute_raw_confidence()
-        self.ema_conf = (
-            raw_conf if self.ema_conf is None
-            else self.ema_conf_alpha * raw_conf + (1.0 - self.ema_conf_alpha) * self.ema_conf
-        )
-        smooth_conf = max(min(self.ema_conf, 1.0), -1.0)
+        close = float(candle["close"])
+        high = float(candle["high"])
+        low = float(candle["low"])
+        open_price = float(candle.get("open", close))
 
-        return {
-            "confidence": smooth_conf,
+        atr_regime_1h, atr_regime_4h, local_regime, global_regime = self._compute_regimes()
+
+        self._update_confidence()
+
+        meta_state = {
+            "open": open_price,
+            "high": high,
+            "low": low,
+            "close": close,
             "atr_1h": self.atr_1h,
             "atr_4h": self.atr_4h,
-            "atr_regime_1h": self.atr_regime_1h,
-            "atr_regime_4h": self.atr_regime_4h,
-            "local_regime": self.local_regime,
-            "global_regime": self.global_regime,
+            "atr_regime_1h": atr_regime_1h,
+            "atr_regime_4h": atr_regime_4h,
+            "local_regime": local_regime,
+            "global_regime": global_regime,
             "mtf_bias_4h": self.mtf_bias_4h,
             "momentum": self.momentum,
             "trend_strength": self.trend_strength,
             "slope": self.slope,
             "ema_fast": self.ema_fast,
-            "close": self.last_close,
-            "low": self.last_low,
+            "confidence": self.confidence,
         }
 
+        return meta_state
+
     # ------------------------------------------------------------
-    def compute_meta_signal(self, s):
-        debug_info = {}
+    # Entry logic
+    # ------------------------------------------------------------
+    def compute_entry(self, meta_state, debug_info):
+        return compute_entry_signal(self, meta_state, debug_info)
 
-        smooth_conf = float(s["confidence"])
-        local_regime = s["local_regime"]
-        global_regime = s["global_regime"]
-        atr_regime_1h = s["atr_regime_1h"]
-
-        momentum = float(s["momentum"])
-        trend_strength = float(s["trend_strength"])
-        slope = float(s["slope"])
-        close = float(s["close"])
-        low = float(s["low"])
-
-        # --------------------------------------------------------
-        # Entry filters
-        # --------------------------------------------------------
-        f = apply_meta_filters({
-            "atr_1h_entry": s["atr_1h"],
-            "confidence_entry": smooth_conf,
-            "local_regime": local_regime,
-            "global_regime": global_regime,
-        })
-        debug_info["filters"] = f.__dict__
-
-        if not f.passed:
-            self.logger.log({"close": close}, s, debug_info, None)
+    # ------------------------------------------------------------
+    # Exit logic (ATR-Trail 2.0)
+    # ------------------------------------------------------------
+    def compute_exit(self, meta_state, debug_info):
+        if self.position != "LONG":
             return None
 
-        # --------------------------------------------------------
-        # ENTRY LOGIC
-        # --------------------------------------------------------
-        if self.position is None:
-            s1_ok = stage1_check(self, smooth_conf, local_regime)
-            s2_ok = stage2_check(self, smooth_conf, local_regime)
+        trail = trail_engine(self, meta_state)
+        debug_info["trail"] = trail
 
-            debug_info["stage1"] = s1_ok
-            debug_info["stage2"] = s2_ok
-
-            if s1_ok and s2_ok:
-                self.open_condition_streak += 1
-            else:
-                self.open_condition_streak = 0
-
-            if self.open_condition_streak >= self.required_streak:
-                self.position = "LONG"
-                self.entry_price = close
-                self.entry_bar_index = self.bar_index
-                self.max_price_since_entry = close
-                self.open_condition_streak = 0
-
-                decision = {"kind": "meta_signal", "signal": "OPEN_LONG", "confidence": smooth_conf}
-                self.logger.log({"close": close}, s, debug_info, decision)
-                return decision
-
-            self.logger.log({"close": close}, s, debug_info, None)
+        if trail is None:
             return None
 
-        # --------------------------------------------------------
-        # EXIT LOGIC
-        # --------------------------------------------------------
-        if self.position == "LONG":
-            exit_reason = None
-            exit_price = close
+        stop_price = trail["stop_price"]
+        close = float(meta_state["close"])
 
-            # ATR-Regime trailing modulation
-            self.atr_trail_mult = adjust_trailing_mult_by_regime(
-                self.atr_trail_mult,
-                local_regime
-            )
+        if close <= stop_price:
+            self.position = None
+            self.last_exit_reason = trail["kind"]
+            self.last_exit_bar_index = self.bar_index
 
-            # Intrabar stops
-            for stop_fn in [
-                intrabar_abs_stop,
-                intrabar_hwm_stop,
-                intrabar_atr_trail,
-                intrabar_ema_stop,
-            ]:
-                rp = stop_fn(self, low)
-                if rp is not None:
-                    exit_reason, exit_price = rp
-                    debug_info["intrabar_stop"] = stop_fn.__name__
-                    break
-
-            # Profit lock (dynamic + ATR-aware)
-            if exit_reason is None:
-                dyn_rr = compute_dynamic_rr(
-                    trend_strength,
-                    slope,
-                    momentum,
-                    self.atr_profit_lock_rr,
-                    local_regime
-                )
-
-                base_rr = self.atr_profit_lock_rr
-                self.atr_profit_lock_rr = dyn_rr
-
-                r = exit_profit_lock(self, close)
-                self.atr_profit_lock_rr = base_rr
-
-                if r is not None:
-                    exit_reason = r
-                    debug_info["profit_lock_rr"] = dyn_rr
-
-            # Soft exit (smoothed + ATR-aware)
-            if exit_reason is None:
-                raw_soft = 1.0 if exit_soft(
-                    self,
-                    smooth_conf,
-                    s["mtf_bias_4h"],
-                    atr_regime_1h,
-                    momentum,
-                    trend_strength,
-                    local_regime,
-                ) is not None else 0.0
-
-                raw_soft = modulate_soft_exit_raw(raw_soft, local_regime)
-                smooth_soft = smooth_soft_exit(self.soft_exit_ema, raw_soft, self.soft_exit_alpha)
-                self.soft_exit_ema = smooth_soft
-
-                debug_info["soft_exit_raw"] = raw_soft
-                debug_info["soft_exit_smooth"] = smooth_soft
-
-                if smooth_soft > 0.6:
-                    exit_reason = "SOFT_EXIT_SMOOTH"
-
-            # Finalize exit
-            if exit_reason:
-                self.position = None
-                self.entry_price = None
-                self.entry_bar_index = None
-                self.max_price_since_entry = None
-                self.open_condition_streak = 0
-
-                decision = {
-                    "kind": "meta_signal",
-                    "signal": "CLOSE_LONG",
-                    "reason": exit_reason,
-                    "exit_price": exit_price,
-                    "confidence": smooth_conf,
-                }
-                self.logger.log({"close": close}, s, debug_info, decision)
-                return decision
-
-            self.logger.log({"close": close}, s, debug_info, None)
-            return None
+            return {
+                "kind": "meta_signal",
+                "signal": "CLOSE_LONG",
+                "reason": trail["kind"],
+                "exit_price": close,
+                "confidence": float(meta_state["confidence"]),
+            }
 
         return None
+
+    # ------------------------------------------------------------
+    # Legacy adapter for LiveEngine 4.3
+    # With Stage 2.2 meta-signal filtering
+    # ------------------------------------------------------------
+    def compute_meta_signal(self, meta_state):
+        debug_info = {}
+
+        entry_decision = self.compute_entry(meta_state, debug_info)
+        exit_decision = None
+        if entry_decision is None:
+            exit_decision = self.compute_exit(meta_state, debug_info)
+
+        meta_signal = None
+        exit_reason = None
+
+        if entry_decision is not None:
+            meta_signal = "OPEN_LONG"
+        elif exit_decision is not None:
+            meta_signal = "CLOSE_LONG"
+            exit_reason = exit_decision.get("reason")
+
+        if meta_signal is None:
+            # still update filter state with no signal
+            filter_result = self.meta_filter.process(
+                meta_signal=None,
+                raw_confidence=float(meta_state["confidence"]),
+                exit_reason=None,
+            )
+            debug_info["meta_filter"] = filter_result
+            return None
+
+        filter_result = self.meta_filter.process(
+            meta_signal=meta_signal,
+            raw_confidence=float(meta_state["confidence"]),
+            exit_reason=exit_reason,
+        )
+        debug_info["meta_filter"] = filter_result
+
+        filtered_signal = filter_result["filtered_signal"]
+
+        if filtered_signal is None:
+            return None
+
+        if filtered_signal == "OPEN_LONG" and entry_decision is not None:
+            return entry_decision
+
+        if filtered_signal == "CLOSE_LONG" and exit_decision is not None:
+            return exit_decision
+
+        return None
+
+    # ------------------------------------------------------------
+    # Main entry point for each bar (new architecture)
+    # With Stage 2.2 meta-signal filtering
+    # ------------------------------------------------------------
+    def on_candle(self, candle):
+        meta_state = self.compute_meta_state(candle)
+        debug_info = {}
+
+        self.bar_index += 1
+        self.update_state(float(meta_state["close"]))
+
+        entry_decision = self.compute_entry(meta_state, debug_info)
+        exit_decision = None
+        if entry_decision is None:
+            exit_decision = self.compute_exit(meta_state, debug_info)
+
+        meta_signal = None
+        exit_reason = None
+
+        if entry_decision is not None:
+            meta_signal = "OPEN_LONG"
+        elif exit_decision is not None:
+            meta_signal = "CLOSE_LONG"
+            exit_reason = exit_decision.get("reason")
+
+        if meta_signal is None:
+            filter_result = self.meta_filter.process(
+                meta_signal=None,
+                raw_confidence=float(meta_state["confidence"]),
+                exit_reason=None,
+            )
+            debug_info["meta_filter"] = filter_result
+            return None, debug_info
+
+        filter_result = self.meta_filter.process(
+            meta_signal=meta_signal,
+            raw_confidence=float(meta_state["confidence"]),
+            exit_reason=exit_reason,
+        )
+        debug_info["meta_filter"] = filter_result
+
+        filtered_signal = filter_result["filtered_signal"]
+
+        if filtered_signal is None:
+            return None, debug_info
+
+        if filtered_signal == "OPEN_LONG" and entry_decision is not None:
+            return entry_decision, debug_info
+
+        if filtered_signal == "CLOSE_LONG" and exit_decision is not None:
+            return exit_decision, debug_info
+
+        return None, debug_info
