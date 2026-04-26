@@ -8,10 +8,10 @@ Project Name:
 
 Version:
     Core Engine: 4.x
-    MetaStrategy: 8.4-M-F
+    MetaStrategy: 9.1-MF
     RiskEngine: 1.0
     PositionManager: 2.3
-    LiveEngine: 4.1
+    LiveEngine: 4.3
     OfflineRunner: 7.6-F
 
 Execution Model:
@@ -32,10 +32,10 @@ ASCII-only trading system designed for high-performance
 algorithmic trading under strict reproducibility rules.
 
 The system consists of:
-- MetaStrategy 8.4-M-F (modular, ATR-aware, intrabar stops)
+- MetaStrategy 9.1-MF (Stage1-Lite, Stage2-Lite v2, Stage 2.2 MetaSignalFilter)
 - RiskEngine 1.0 (institutional risk module)
 - PositionManager 2.3 (position state, stops, PnL)
-- LiveEngine 4.1 (signal + risk integration)
+- LiveEngine 4.3 (signal + risk integration, dry-run JSONL logging)
 - OfflineRunner 7.6-F (intrabar-aware CSV diagnostics)
 - BacktestEngine 3.x (deterministic backtesting)
 
@@ -47,45 +47,56 @@ All modules follow NT-Tech Mode:
 - Ready for direct execution
 
 ================================================
-MetaStrategy 8.4-M-F Overview
+MetaStrategy 9.1-MF Overview (Stage2.2 Integrated)
 ================================================
 
-MetaStrategy 8.4-M-F is a modular, multi-stage trading engine
-with synthetic intrabar stop execution for 1h candles.
+MetaStrategy 9.1-MF is a modular, multi-stage trading engine
+with synthetic intrabar stop execution for 1h candles and
+adaptive, volatility-aware filtering.
 
 Pipeline:
 1) Indicator Engine
-   - EMA(30/90/180)
+   - EMA(10/30/90)
    - ATR(1h/4h)
    - Momentum, slope, trend strength
    - ATR mean tracking
 
 2) Regime Engine
    - ATR regimes (low/normal/high)
-   - Local regime (trend/range/expansion)
-   - Global regime (trend/range/expansion)
-   - MTF bias (1h + synthetic 4h)
+   - Local regime (1h)
+   - Global regime (4h)
+   - MTF bias (synthetic 4h, mtf_bias_4h)
 
 3) Stage 1 (High Recall)
    - Trend, slope, momentum gates
-   - Confidence smoothing
+   - Confidence model (NT-Tech 2026)
    - EMA structure filter
+   - ATR-aware entry gating
 
 4) Stage 2 (High Precision)
-   - MTF bias gate
+   - MTF bias gate (mtf_bias_4h)
    - ATR regime gate
    - Impulse window
    - Structure validation
+   - Adaptive high-volatility handling
 
-5) Intrabar Stop Engine (synthetic)
+5) Stage 2.2 — MetaSignalFilter (NEW)
+   - EMA smoothing of confidence
+   - Hysteresis for OPEN_LONG / CLOSE_LONG
+   - 2-bar exit confirmation
+   - Noise suppression
+   - Unified behavior for LiveEngine and OfflineRunner
+   - Stateful filter with deterministic transitions
+
+6) Intrabar Stop Engine (synthetic)
    - Absolute stop (-6 percent)
    - HWM drawdown stop (-6 percent)
    - ATR trailing stop
-   - EMA-ATR stop
+   - EMA-fast stop (soft intrabar EMA stop)
    - All stops evaluated using candle.low
    - exit_price propagated to OfflineRunner
 
-6) Soft Exit Engine
+7) Soft Exit Engine
    - Confidence drop
    - Regime flip
    - Momentum loss
@@ -113,7 +124,7 @@ Key features:
 - Intrabar-aware exit_price support
 - Synthetic intrabar stop execution
 - Deterministic CSV processing
-- Compact meta_signal and trade logs
+- JSONL-compatible meta_state logging
 - Full compatibility with Analyzer 2.1
 
 Exit logic:
@@ -134,33 +145,47 @@ C:\TradingBots\NT
 │
 ├── bot_ai
 │   ├── strategy
-│   │     meta_strategy.py        (thin wrapper)
-│   │     filters.py
-│   │     ...
-│   │     meta/
-│   │         __init__.py
-│   │         indicators.py
-│   │         regimes.py
-│   │         stage1.py
-│   │         stage2.py
-│   │         intrabar_stops.py
-│   │         exits.py
-│   │         meta_strategy.py    (core 8.4-M-F)
+│   │   │   meta_strategy.py              (thin wrapper)
+│   │   │   filters.py
+│   │   │   entry_engine.py
+│   │   │   trail_engine.py
+│   │   │   ...
+│   │   │
+│   │   └── meta
+│   │       │   __init__.py
+│   │       │   indicators.py
+│   │       │   regimes.py
+│   │       │   stage1.py
+│   │       │   stage2.py
+│   │       │   meta_signal_filter.py     (NEW, Stage 2.2)
+│   │       │   intrabar_stops.py
+│   │       │   exits.py
+│   │       │   meta_strategy.py          (core MetaStrategy 9.1-MF)
 │   │
 │   ├── engine
-│   │     offline_runner.py       (7.6-F)
-│   │     live_engine.py
-│   │     ...
+│   │   │   offline_runner.py             (7.6-F)
+│   │   │   live_engine.py                (4.3)
+│   │   │   live_loop.py
+│   │   │   diagnose_meta.py
+│   │   │   diagnose_meta_6_3.py
+│   │   │   offline_log_analyzer.py
+│   │   │   offline_log_analyzer_full.py
+│   │   │   ...
 │   │
 │   ├── risk
-│   │     risk_guard.py
+│   │   │   risk_guard.py
 │   │
 │   ├── backtest
-│   │     backtest_engine.py
+│   │   │   backtest_engine.py
 │   │
 │   └── common
-│         indicators.py
-│         utils.py
+│       │   indicators.py
+│       │   utils.py
+│
+└── logs
+    │   live_log.txt
+    │   backtest_log.txt
+    │   offline_log.txt
 
 ================================================
 Execution Modes
@@ -182,7 +207,7 @@ Live Mode:
 Logging
 ================================================
 
-All logs are ASCII-only and deterministic.
+All logs are ASCII-only, JSONL-structured, and deterministic.
 
 Default paths:
 C:/TradingBots/NT/logs/live_log.txt

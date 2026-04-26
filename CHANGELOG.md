@@ -4,7 +4,42 @@
 # ================================================================
 
 ------------------------------------------------
-## [8.4-M] - Modular MetaStrategy + Intrabar Stop Engine (Current Stable)
+## [9.1-MF] - MetaStrategy Stage 2.2 (MetaSignalFilter Integrated)
+------------------------------------------------
+- MetaStrategy upgraded to 9.1-MF (Stage 2.2 integrated)
+- Added MetaSignalFilter (stateful meta-signal filter)
+    * EMA smoothing of confidence
+    * Hysteresis for OPEN_LONG / CLOSE_LONG
+    * 2-bar exit confirmation
+    * Noise suppression in low-slope / low-momentum zones
+    * Unified behavior for LiveEngine 4.3 and OfflineRunner 7.6-F
+- Updated meta_strategy.py (Variant C integration: compute_meta_signal + on_candle)
+- Added new module: meta_signal_filter.py (strategy/meta/)
+- Improved stability in high-volatility pullbacks
+- Eliminated false CLOSE_LONG signals in noisy regimes
+- Verified correct behavior on full offline log (no false positives)
+- Updated documentation (README.md, PROJECT_INFO.md)
+- Deterministic behavior preserved under NT-Tech Mode
+
+------------------------------------------------
+## [9.0] - MetaStrategy Stage2.1 Stable (Current Stable)
+------------------------------------------------
+- MetaStrategy upgraded to 9.0 (Stage2.1 stable)
+- Adaptive ATR-Regime filters (low/normal/high/extreme)
+- High-volatility regime softened (momentum/slope/trend checks)
+- mtf_bias_4h implemented (EMA-smoothed multi-timeframe bias)
+- Stage2 gating stabilized (precision mode)
+- Soft EMA-fast intrabar stop (0.985 multiplier)
+- ATR trailing intrabar stop validated
+- Intrabar Stop Engine fully restored (absolute, HWM, ATR, EMA)
+- Indicators pipeline stabilized (momentum, slope, trend_strength)
+- Full JSONL logging (meta_state, risk_state, decisions)
+- OfflineRunner 7.6-F fully compatible with intrabar exit_price
+- Deterministic behavior preserved under NT-Tech Mode
+- Verified via dry-run diagnostics and offline log analyzers
+
+------------------------------------------------
+## [8.4-M] - Modular MetaStrategy + Intrabar Stop Engine
 ------------------------------------------------
 - Full modular architecture for MetaStrategy (strategy/meta/*)
 - Intrabar Stop Engine (synthetic intrabar execution)
